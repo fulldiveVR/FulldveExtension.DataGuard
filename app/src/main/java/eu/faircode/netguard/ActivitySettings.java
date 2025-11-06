@@ -39,17 +39,13 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
-import android.preference.ListPreference;
 import android.preference.MultiSelectListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceGroup;
 import android.preference.PreferenceScreen;
 import android.preference.TwoStatePreference;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
 import android.text.TextUtils;
-import android.text.style.ImageSpan;
 import android.util.Log;
 import android.util.Xml;
 import android.view.LayoutInflater;
@@ -65,6 +61,8 @@ import androidx.core.content.ContextCompat;
 import androidx.core.util.PatternsCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
+
+import com.fulldive.startapppopups.donation.DonationManager;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -435,6 +433,24 @@ public class ActivitySettings extends AppCompatActivity implements SharedPrefere
         pref_technical_info.setOnPreferenceClickListener(listener);
         pref_technical_network.setOnPreferenceClickListener(listener);
         updateTechnicalInfo();
+        Preference donateUs = screen.findPreference("donate_us");
+        if (donateUs != null) {
+            donateUs.setOnPreferenceClickListener(preference -> {
+                DonationManager.INSTANCE.purchaseFromSettings(
+                        ActivitySettings.this,
+                        () -> {
+                            return null;
+                        },
+                        () -> {
+                            runOnUiThread(() -> {
+                                Toast.makeText(ActivitySettings.this, R.string.donation_message, Toast.LENGTH_LONG).show();
+                            });
+                            return null;
+                        }
+                );
+                return true;
+            });
+        }
     }
 
     @Override

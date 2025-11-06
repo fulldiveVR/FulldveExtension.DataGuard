@@ -73,6 +73,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
+import eu.faircode.netguard.appextension.AppExtensionWorkType;
+import eu.faircode.netguard.appextension.PopupManager;
+
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -417,6 +420,18 @@ public class ActivityMain extends AppCompatActivity implements SharedPreferences
 
         // Handle intent
         checkExtras(getIntent());
+
+        new PopupManager().onAppStarted(this);
+        String workType = getIntent().getAction();
+        if (workType != null && workType.equals(AppExtensionWorkType.OPEN.INSTANCE.getId())) {
+            final Intent prepareIntent = VpnService.prepare(this);
+            if (prepareIntent != null) {
+                try {
+                    startActivityForResult(prepareIntent, REQUEST_VPN);
+                } catch (Exception ignored) {
+                }
+            }
+        }
     }
 
     @Override

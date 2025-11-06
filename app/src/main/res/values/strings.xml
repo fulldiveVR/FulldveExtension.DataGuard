@@ -300,7 +300,7 @@
     <string name="rate_us_title">Rate us</string>
     <string name="install_browser_title">Sync with Wize Browser and get rewards</string>
     <string name="install_browser_description">Thank you for trying our Wize apps, we feature many more great apps such as a browser that rewards you cash when you browse, check it out!</string>
-    <string name="rate_us_description">Do you like Wize Browser? We would love to hear your feedback and make the app better for you.</string>
+    <string name="rate_us_description">Do you like DataGuard? We would love to hear your feedback and make the app better for you.</string>
     <string-array name="themeNames">
         <item>teal/orange</item>
         <item>blue/orange</item>
