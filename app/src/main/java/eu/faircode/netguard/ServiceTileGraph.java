@@ -19,7 +19,6 @@ package eu.faircode.netguard;
     Copyright 2015-2025 by Marcel Bokhorst (M66B)
 */
 
-
 import android.annotation.TargetApi;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Icon;
@@ -54,7 +53,8 @@ public class ServiceTileGraph extends TileService implements SharedPreferences.O
         Tile tile = getQsTile();
         if (tile != null) {
             tile.setState(stats ? Tile.STATE_ACTIVE : Tile.STATE_INACTIVE);
-            tile.setIcon(Icon.createWithResource(this, stats ? R.drawable.ic_equalizer_white_24dp : R.drawable.ic_equalizer_white_24dp_60));
+            tile.setIcon(Icon.createWithResource(this,
+                    stats ? R.drawable.ic_equalizer_white_24dp : R.drawable.ic_equalizer_white_24dp_60));
             tile.updateTile();
         }
     }
@@ -71,10 +71,7 @@ public class ServiceTileGraph extends TileService implements SharedPreferences.O
         // Check state
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         boolean stats = !prefs.getBoolean("show_stats", false);
-        if (stats && !IAB.isPurchased(ActivityPro.SKU_SPEED, this))
-            Toast.makeText(this, R.string.title_pro_feature, Toast.LENGTH_SHORT).show();
-        else
-            prefs.edit().putBoolean("show_stats", stats).apply();
+        prefs.edit().putBoolean("show_stats", stats).apply();
         ServiceSinkhole.reloadStats("tile", this);
     }
 }

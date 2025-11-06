@@ -104,12 +104,10 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> im
             "com.skype.raider",
             "com.snapchat.android",
             "com.whatsapp",
-            "com.whatsapp.w4b"
-    );
+            "com.whatsapp.w4b");
 
     private List<String> download = Arrays.asList(
-            "com.google.android.youtube"
-    );
+            "com.google.android.youtube");
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public View view;
@@ -265,11 +263,13 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> im
         this.inflater = LayoutInflater.from(context);
 
         if (prefs.getBoolean("dark_theme", false))
-            colorChanged = Color.argb(128, Color.red(Color.DKGRAY), Color.green(Color.DKGRAY), Color.blue(Color.DKGRAY));
+            colorChanged = Color.argb(128, Color.red(Color.DKGRAY), Color.green(Color.DKGRAY),
+                    Color.blue(Color.DKGRAY));
         else
-            colorChanged = Color.argb(128, Color.red(Color.LTGRAY), Color.green(Color.LTGRAY), Color.blue(Color.LTGRAY));
+            colorChanged = Color.argb(128, Color.red(Color.LTGRAY), Color.green(Color.LTGRAY),
+                    Color.blue(Color.LTGRAY));
 
-        TypedArray ta = context.getTheme().obtainStyledAttributes(new int[]{android.R.attr.textColorPrimary});
+        TypedArray ta = context.getTheme().obtainStyledAttributes(new int[] { android.R.attr.textColorPrimary });
         try {
             colorText = ta.getColor(0, 0);
         } finally {
@@ -286,7 +286,8 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> im
 
         TypedValue typedValue = new TypedValue();
         context.getTheme().resolveAttribute(android.R.attr.listPreferredItemHeight, typedValue, true);
-        int height = TypedValue.complexToDimensionPixelSize(typedValue.data, context.getResources().getDisplayMetrics());
+        int height = TypedValue.complexToDimensionPixelSize(typedValue.data,
+                context.getResources().getDisplayMetrics());
         this.iconSize = Math.round(height * context.getResources().getDisplayMetrics().density + 0.5f);
 
         setHasStableIds(true);
@@ -368,8 +369,8 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> im
             GlideApp.with(holder.itemView.getContext())
                     .applyDefaultRequestOptions(new RequestOptions().format(DecodeFormat.PREFER_RGB_565))
                     .load(uri)
-                    //.diskCacheStrategy(DiskCacheStrategy.NONE)
-                    //.skipMemoryCache(true)
+                    // .diskCacheStrategy(DiskCacheStrategy.NONE)
+                    // .skipMemoryCache(true)
                     .override(iconSize, iconSize)
                     .into(holder.ivIcon);
         }
@@ -454,7 +455,8 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> im
 
         holder.tvRoaming.setTextColor(rule.apply ? colorOff : colorGrayed);
         holder.tvRoaming.setAlpha(otherActive ? 1 : 0.5f);
-        holder.tvRoaming.setVisibility(rule.roaming && (!rule.other_blocked || rule.screen_other) ? View.VISIBLE : View.INVISIBLE);
+        holder.tvRoaming.setVisibility(
+                rule.roaming && (!rule.other_blocked || rule.screen_other) ? View.VISIBLE : View.INVISIBLE);
 
         holder.tvRemarkMessaging.setVisibility(messaging.contains(rule.packageName) ? View.VISIBLE : View.GONE);
         holder.tvRemarkDownload.setVisibility(download.contains(rule.packageName) ? View.VISIBLE : View.GONE);
@@ -647,7 +649,8 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> im
                 cbLogging.setChecked(log_app);
                 cbFiltering.setChecked(filter);
                 cbFiltering.setEnabled(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
-                tvFilter4.setVisibility(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? View.GONE : View.VISIBLE);
+                tvFilter4.setVisibility(
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? View.GONE : View.VISIBLE);
                 cbNotify.setChecked(notify_access);
                 cbNotify.setEnabled(log_app);
 
@@ -733,22 +736,23 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> im
                     }
                     popup.getMenu().findItem(R.id.menu_host).setEnabled(multiple);
 
-                    markPro(context, popup.getMenu().findItem(R.id.menu_allow), ActivityPro.SKU_FILTER);
-                    markPro(context, popup.getMenu().findItem(R.id.menu_block), ActivityPro.SKU_FILTER);
-
                     // Whois
-                    final Intent lookupIP = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.dnslytics.com/whois-lookup/" + daddr));
+                    final Intent lookupIP = new Intent(Intent.ACTION_VIEW,
+                            Uri.parse("https://www.dnslytics.com/whois-lookup/" + daddr));
                     if (pm.resolveActivity(lookupIP, 0) == null)
                         popup.getMenu().removeItem(R.id.menu_whois);
                     else
-                        popup.getMenu().findItem(R.id.menu_whois).setTitle(context.getString(R.string.title_log_whois, daddr));
+                        popup.getMenu().findItem(R.id.menu_whois)
+                                .setTitle(context.getString(R.string.title_log_whois, daddr));
 
                     // Lookup port
-                    final Intent lookupPort = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.speedguide.net/port.php?port=" + dport));
+                    final Intent lookupPort = new Intent(Intent.ACTION_VIEW,
+                            Uri.parse("https://www.speedguide.net/port.php?port=" + dport));
                     if (dport <= 0 || pm.resolveActivity(lookupPort, 0) == null)
                         popup.getMenu().removeItem(R.id.menu_port);
                     else
-                        popup.getMenu().findItem(R.id.menu_port).setTitle(context.getString(R.string.title_log_port, dport));
+                        popup.getMenu().findItem(R.id.menu_port)
+                                .setTitle(context.getString(R.string.title_log_port, dport));
 
                     popup.getMenu().findItem(R.id.menu_time).setTitle(
                             SimpleDateFormat.getDateTimeInstance().format(time));
@@ -770,20 +774,14 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> im
                                     break;
 
                                 case R.id.menu_allow:
-                                    if (IAB.isPurchased(ActivityPro.SKU_FILTER, context)) {
-                                        DatabaseHelper.getInstance(context).setAccess(id, 0);
-                                        ServiceSinkhole.reload("allow host", context, false);
-                                    } else
-                                        context.startActivity(new Intent(context, ActivityPro.class));
+                                    DatabaseHelper.getInstance(context).setAccess(id, 0);
+                                    ServiceSinkhole.reload("allow host", context, false);
                                     result = true;
                                     break;
 
                                 case R.id.menu_block:
-                                    if (IAB.isPurchased(ActivityPro.SKU_FILTER, context)) {
-                                        DatabaseHelper.getInstance(context).setAccess(id, 1);
-                                        ServiceSinkhole.reload("block host", context, false);
-                                    } else
-                                        context.startActivity(new Intent(context, ActivityPro.class));
+                                    DatabaseHelper.getInstance(context).setAccess(id, 1);
+                                    ServiceSinkhole.reload("block host", context, false);
                                     result = true;
                                     break;
 
@@ -794,7 +792,8 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> im
                                     break;
 
                                 case R.id.menu_copy:
-                                    ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                                    ClipboardManager clipboard = (ClipboardManager) context
+                                            .getSystemService(Context.CLIPBOARD_SERVICE);
                                     ClipData clip = ClipData.newPlainText("netguard", daddr);
                                     clipboard.setPrimaryClip(clip);
                                     return true;
@@ -867,24 +866,14 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> im
     public void onViewRecycled(ViewHolder holder) {
         super.onViewRecycled(holder);
 
-        //Context context = holder.itemView.getContext();
-        //GlideApp.with(context).clear(holder.ivIcon);
+        // Context context = holder.itemView.getContext();
+        // GlideApp.with(context).clear(holder.ivIcon);
 
         CursorAdapter adapter = (CursorAdapter) holder.lvAccess.getAdapter();
         if (adapter != null) {
             Log.i(TAG, "Closing access cursor");
             adapter.changeCursor(null);
             holder.lvAccess.setAdapter(null);
-        }
-    }
-
-    private void markPro(Context context, MenuItem menu, String sku) {
-        if (sku == null || !IAB.isPurchased(sku, context)) {
-            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-            boolean dark = prefs.getBoolean("dark_theme", false);
-            SpannableStringBuilder ssb = new SpannableStringBuilder("  " + menu.getTitle());
-            ssb.setSpan(new ImageSpan(context, dark ? R.drawable.ic_shopping_cart_white_24dp : R.drawable.ic_shopping_cart_black_24dp), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-            menu.setTitle(ssb);
         }
     }
 

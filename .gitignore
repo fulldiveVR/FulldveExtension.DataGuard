@@ -4,6 +4,7 @@
 /.idea
 /.idea/workspace.xml
 /.idea/libraries
+/.vscode
 .DS_Store
 /build
 /captures
@@ -14,3 +15,6 @@
 keystore.properties
 crowdin.properties
 app/.cxx/
+flurrykey.txt
+googlekey.txt
+app/google-services.json

@@ -1730,10 +1730,6 @@ public class ServiceSinkhole extends VpnService implements SharedPreferences.OnS
 
         if (dname == null) {
             mapUidIPFilters.clear();
-            if (!IAB.isPurchased(ActivityPro.SKU_FILTER, ServiceSinkhole.this)) {
-                lock.writeLock().unlock();
-                return;
-            }
         }
 
         try (Cursor cursor = DatabaseHelper.getInstance(ServiceSinkhole.this).getAccessDns(dname)) {
@@ -2360,7 +2356,7 @@ public class ServiceSinkhole extends VpnService implements SharedPreferences.OnS
                     if (!intent.getBooleanExtra(Intent.EXTRA_REPLACING, false)) {
                         // Show notification
                         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-                        if (IAB.isPurchased(ActivityPro.SKU_NOTIFY, context) && prefs.getBoolean("install", true)) {
+                        if (prefs.getBoolean("install", true)) {
                             int uid = intent.getIntExtra(Intent.EXTRA_UID, -1);
                             notifyNewApplication(uid, false);
                         }

@@ -19,7 +19,6 @@ package eu.faircode.netguard;
     Copyright 2015-2025 by Marcel Bokhorst (M66B)
 */
 
-
 import android.annotation.TargetApi;
 import android.content.SharedPreferences;
 import android.graphics.drawable.Icon;
@@ -54,7 +53,8 @@ public class ServiceTileFilter extends TileService implements SharedPreferences.
         Tile tile = getQsTile();
         if (tile != null) {
             tile.setState(filter ? Tile.STATE_ACTIVE : Tile.STATE_INACTIVE);
-            tile.setIcon(Icon.createWithResource(this, filter ? R.drawable.ic_filter_list_white_24dp : R.drawable.ic_filter_list_white_24dp_60));
+            tile.setIcon(Icon.createWithResource(this,
+                    filter ? R.drawable.ic_filter_list_white_24dp : R.drawable.ic_filter_list_white_24dp_60));
             tile.updateTile();
         }
     }
@@ -69,12 +69,9 @@ public class ServiceTileFilter extends TileService implements SharedPreferences.
         Log.i(TAG, "Click");
 
         if (Util.canFilter(this)) {
-            if (IAB.isPurchased(ActivityPro.SKU_FILTER, this)) {
-                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
-                prefs.edit().putBoolean("filter", !prefs.getBoolean("filter", false)).apply();
-                ServiceSinkhole.reload("tile", this, false);
-            } else
-                Toast.makeText(this, R.string.title_pro_feature, Toast.LENGTH_SHORT).show();
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            prefs.edit().putBoolean("filter", !prefs.getBoolean("filter", false)).apply();
+            ServiceSinkhole.reload("tile", this, false);
         } else
             Toast.makeText(this, R.string.msg_unavailable, Toast.LENGTH_SHORT).show();
     }

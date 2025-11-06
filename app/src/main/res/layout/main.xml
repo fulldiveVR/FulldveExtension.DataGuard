@@ -67,34 +67,6 @@
                 android:textAppearance="@style/TextSmall" />
         </LinearLayout>
 
-        <LinearLayout
-            android:id="@+id/llFairEmail"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="8dp"
-            android:visibility="gone">
-
-            <TextView
-                android:id="@+id/tvFairEmail"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_weight="1"
-                android:text="@string/msg_fairemail"
-                android:textAppearance="@style/TextSmall" />
-
-            <Button
-                android:id="@+id/btnFairEmail"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_marginStart="8dp"
-                android:layout_marginLeft="8dp"
-                android:text="@android:string/ok"
-                android:textAppearance="@style/TextSmall" />
-        </LinearLayout>
-
         <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
             android:id="@+id/swipeRefresh"
             android:layout_width="match_parent"
@@ -188,44 +160,6 @@
                 android:layout_marginLeft="8dp"
                 android:text="@android:string/ok"
                 android:textAppearance="@style/TextSmall" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/llSupport"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dip"
-            android:orientation="vertical">
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="2dip"
-                android:background="@android:color/darker_gray" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="4dp"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_gravity="center_vertical"
-                    android:src="@drawable/ic_security_color_24dp" />
-
-                <TextView
-                    android:id="@+id/tvSupport"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginLeft="4dp"
-                    android:text="@string/app_support"
-                    android:textAppearance="@style/TextSmall"
-                    android:textColor="?attr/colorOff"
-                    android:textStyle="bold" />
-            </LinearLayout>
         </LinearLayout>
     </LinearLayout>
 

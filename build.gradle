@@ -20,13 +20,13 @@ buildscript {
     ext.kotlin_coroutines_version = '1.6.2'
     repositories {
         google()
-        jcenter()
+        mavenCentral()
     }
     dependencies {
         // http://tools.android.com/tech-docs/new-build-system/gradle-experimental
         // https://bintray.com/android/android-tools/com.android.tools.build.gradle-experimental/view
         // https://bintray.com/android/android-tools/com.google.gms.google-services/view
-        classpath 'com.android.tools.build:gradle:8.1.1'
+        classpath 'com.android.tools.build:gradle:8.13.0'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
 
         // NOTE: Do not place your application dependencies here; they belong

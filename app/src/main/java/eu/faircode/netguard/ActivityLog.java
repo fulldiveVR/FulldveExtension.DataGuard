@@ -88,11 +88,6 @@ public class ActivityLog extends AppCompatActivity implements SharedPreferences.
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        if (!IAB.isPurchased(ActivityPro.SKU_LOG, this)) {
-            startActivity(new Intent(this, ActivityPro.class));
-            finish();
-        }
-
         Util.setTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.logging);
@@ -137,7 +132,8 @@ public class ActivityLog extends AppCompatActivity implements SharedPreferences.
         boolean allowed = prefs.getBoolean("traffic_allowed", true);
         boolean blocked = prefs.getBoolean("traffic_blocked", true);
 
-        adapter = new AdapterLog(this, DatabaseHelper.getInstance(this).getLog(udp, tcp, other, allowed, blocked), resolve, organization);
+        adapter = new AdapterLog(this, DatabaseHelper.getInstance(this).getLog(udp, tcp, other, allowed, blocked),
+                resolve, organization);
         adapter.setFilterQueryProvider(new FilterQueryProvider() {
             public Cursor runQuery(CharSequence constraint) {
                 return DatabaseHelper.getInstance(ActivityLog.this).searchLog(constraint.toString());
@@ -162,12 +158,16 @@ public class ActivityLog extends AppCompatActivity implements SharedPreferences.
                 int version = cursor.getInt(cursor.getColumnIndex("version"));
                 int protocol = cursor.getInt(cursor.getColumnIndex("protocol"));
                 final String saddr = cursor.getString(cursor.getColumnIndex("saddr"));
-                final int sport = (cursor.isNull(cursor.getColumnIndex("sport")) ? -1 : cursor.getInt(cursor.getColumnIndex("sport")));
+                final int sport = (cursor.isNull(cursor.getColumnIndex("sport")) ? -1
+                        : cursor.getInt(cursor.getColumnIndex("sport")));
                 final String daddr = cursor.getString(cursor.getColumnIndex("daddr"));
-                final int dport = (cursor.isNull(cursor.getColumnIndex("dport")) ? -1 : cursor.getInt(cursor.getColumnIndex("dport")));
+                final int dport = (cursor.isNull(cursor.getColumnIndex("dport")) ? -1
+                        : cursor.getInt(cursor.getColumnIndex("dport")));
                 final String dname = cursor.getString(cursor.getColumnIndex("dname"));
-                final int uid = (cursor.isNull(cursor.getColumnIndex("uid")) ? -1 : cursor.getInt(cursor.getColumnIndex("uid")));
-                int allowed = (cursor.isNull(cursor.getColumnIndex("allowed")) ? -1 : cursor.getInt(cursor.getColumnIndex("allowed")));
+                final int uid = (cursor.isNull(cursor.getColumnIndex("uid")) ? -1
+                        : cursor.getInt(cursor.getColumnIndex("uid")));
+                int allowed = (cursor.isNull(cursor.getColumnIndex("allowed")) ? -1
+                        : cursor.getInt(cursor.getColumnIndex("allowed")));
 
                 // Get external address
                 InetAddress addr = null;
@@ -193,7 +193,8 @@ public class ActivityLog extends AppCompatActivity implements SharedPreferences.
 
                 // Application name
                 if (uid >= 0)
-                    popup.getMenu().findItem(R.id.menu_application).setTitle(TextUtils.join(", ", Util.getApplicationNames(uid, ActivityLog.this)));
+                    popup.getMenu().findItem(R.id.menu_application)
+                            .setTitle(TextUtils.join(", ", Util.getApplicationNames(uid, ActivityLog.this)));
                 else
                     popup.getMenu().removeItem(R.id.menu_application);
 
@@ -201,14 +202,16 @@ public class ActivityLog extends AppCompatActivity implements SharedPreferences.
                 popup.getMenu().findItem(R.id.menu_protocol).setTitle(Util.getProtocolName(protocol, version, false));
 
                 // Whois
-                final Intent lookupIP = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.dnslytics.com/whois-lookup/" + ip));
+                final Intent lookupIP = new Intent(Intent.ACTION_VIEW,
+                        Uri.parse("https://www.dnslytics.com/whois-lookup/" + ip));
                 if (pm.resolveActivity(lookupIP, 0) == null)
                     popup.getMenu().removeItem(R.id.menu_whois);
                 else
                     popup.getMenu().findItem(R.id.menu_whois).setTitle(getString(R.string.title_log_whois, ip));
 
                 // Lookup port
-                final Intent lookupPort = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.speedguide.net/port.php?port=" + port));
+                final Intent lookupPort = new Intent(Intent.ACTION_VIEW,
+                        Uri.parse("https://www.speedguide.net/port.php?port=" + port));
                 if (port <= 0 || pm.resolveActivity(lookupPort, 0) == null)
                     popup.getMenu().removeItem(R.id.menu_port);
                 else
@@ -256,34 +259,28 @@ public class ActivityLog extends AppCompatActivity implements SharedPreferences.
                                 startActivity(lookupPort);
                                 return true;
 
-                            case R.id.menu_allow:
-                                if (IAB.isPurchased(ActivityPro.SKU_FILTER, ActivityLog.this)) {
-                                    DatabaseHelper.getInstance(ActivityLog.this).updateAccess(packet, dname, 0);
-                                    ServiceSinkhole.reload("allow host", ActivityLog.this, false);
-                                    Intent main = new Intent(ActivityLog.this, ActivityMain.class);
-                                    main.putExtra(ActivityMain.EXTRA_SEARCH, Integer.toString(uid));
-                                    startActivity(main);
-                                } else
-                                    startActivity(new Intent(ActivityLog.this, ActivityPro.class));
+                            case R.id.menu_allow: {
+                                DatabaseHelper.getInstance(ActivityLog.this).updateAccess(packet, dname, 0);
+                                ServiceSinkhole.reload("allow host", ActivityLog.this, false);
+                                Intent main = new Intent(ActivityLog.this, ActivityMain.class);
+                                main.putExtra(ActivityMain.EXTRA_SEARCH, Integer.toString(uid));
+                                startActivity(main);
                                 return true;
-
-                            case R.id.menu_block:
-                                if (IAB.isPurchased(ActivityPro.SKU_FILTER, ActivityLog.this)) {
-                                    DatabaseHelper.getInstance(ActivityLog.this).updateAccess(packet, dname, 1);
-                                    ServiceSinkhole.reload("block host", ActivityLog.this, false);
-                                    Intent main = new Intent(ActivityLog.this, ActivityMain.class);
-                                    main.putExtra(ActivityMain.EXTRA_SEARCH, Integer.toString(uid));
-                                    startActivity(main);
-                                } else
-                                    startActivity(new Intent(ActivityLog.this, ActivityPro.class));
+                            }
+                            case R.id.menu_block: {
+                                DatabaseHelper.getInstance(ActivityLog.this).updateAccess(packet, dname, 1);
+                                ServiceSinkhole.reload("block host", ActivityLog.this, false);
+                                Intent main = new Intent(ActivityLog.this, ActivityMain.class);
+                                main.putExtra(ActivityMain.EXTRA_SEARCH, Integer.toString(uid));
+                                startActivity(main);
                                 return true;
-
-                            case R.id.menu_copy:
+                            }
+                            case R.id.menu_copy: {
                                 ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
                                 ClipData clip = ClipData.newPlainText("netguard", dname == null ? daddr : dname);
                                 clipboard.setPrimaryClip(clip);
                                 return true;
-
+                            }
                             default:
                                 return false;
                         }
@@ -505,12 +502,7 @@ public class ActivityLog extends AppCompatActivity implements SharedPreferences.
                 }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 return true;
 
-            case R.id.menu_log_support:
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse("https://github.com/M66B/NetGuard/blob/master/FAQ.md#user-content-faq27"));
-                if (getPackageManager().resolveActivity(intent, 0) != null)
-                    startActivity(intent);
-                return true;
+            // Removed menu_log_support - menu item doesn't exist
 
             default:
                 return super.onOptionsItemSelected(item);
@@ -566,14 +558,16 @@ public class ActivityLog extends AppCompatActivity implements SharedPreferences.
             intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             intent.setType("application/octet-stream");
-            intent.putExtra(Intent.EXTRA_TITLE, "netguard_" + new SimpleDateFormat("yyyyMMdd").format(new Date().getTime()) + ".pcap");
+            intent.putExtra(Intent.EXTRA_TITLE,
+                    "netguard_" + new SimpleDateFormat("yyyyMMdd").format(new Date().getTime()) + ".pcap");
         }
         return intent;
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
-        Log.i(TAG, "onActivityResult request=" + requestCode + " result=" + requestCode + " ok=" + (resultCode == RESULT_OK));
+        Log.i(TAG, "onActivityResult request=" + requestCode + " result=" + requestCode + " ok="
+                + (resultCode == RESULT_OK));
 
         if (requestCode == REQUEST_PCAP) {
             if (resultCode == RESULT_OK && data != null)
