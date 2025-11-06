@@ -1,19 +1,23 @@
-/*
- *     This file is part of NetGuard.
- *     NetGuard is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
- *     NetGuard is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
- *     You should have received a copy of the GNU General Public License
- *     along with NetGuard.  If not, see <http://www.gnu.org/licenses/>.
- *     Copyright 2015-2019 by Marcel Bokhorst (M66B)
- */
-
 package eu.faircode.netguard;
+
+/*
+    This file is part of NetGuard.
+
+    NetGuard is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    NetGuard is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with NetGuard.  If not, see <http://www.gnu.org/licenses/>.
+
+    Copyright 2015-2025 by Marcel Bokhorst (M66B)
+*/
 
 import android.annotation.TargetApi;
 import android.content.ClipData;
@@ -30,6 +34,9 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.ImageSpan;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -64,7 +71,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.load.DecodeFormat;
 import com.bumptech.glide.request.RequestOptions;
-import eu.faircode.netguard.R;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -98,12 +104,10 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> im
             "com.skype.raider",
             "com.snapchat.android",
             "com.whatsapp",
-            "com.whatsapp.w4b"
-    );
+            "com.whatsapp.w4b");
 
     private List<String> download = Arrays.asList(
-            "com.google.android.youtube"
-    );
+            "com.google.android.youtube");
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         public View view;
@@ -259,11 +263,13 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> im
         this.inflater = LayoutInflater.from(context);
 
         if (prefs.getBoolean("dark_theme", false))
-            colorChanged = Color.argb(128, Color.red(Color.DKGRAY), Color.green(Color.DKGRAY), Color.blue(Color.DKGRAY));
+            colorChanged = Color.argb(128, Color.red(Color.DKGRAY), Color.green(Color.DKGRAY),
+                    Color.blue(Color.DKGRAY));
         else
-            colorChanged = Color.argb(128, Color.red(Color.LTGRAY), Color.green(Color.LTGRAY), Color.blue(Color.LTGRAY));
+            colorChanged = Color.argb(128, Color.red(Color.LTGRAY), Color.green(Color.LTGRAY),
+                    Color.blue(Color.LTGRAY));
 
-        TypedArray ta = context.getTheme().obtainStyledAttributes(new int[]{android.R.attr.textColorPrimary});
+        TypedArray ta = context.getTheme().obtainStyledAttributes(new int[] { android.R.attr.textColorPrimary });
         try {
             colorText = ta.getColor(0, 0);
         } finally {
@@ -280,7 +286,8 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> im
 
         TypedValue typedValue = new TypedValue();
         context.getTheme().resolveAttribute(android.R.attr.listPreferredItemHeight, typedValue, true);
-        int height = TypedValue.complexToDimensionPixelSize(typedValue.data, context.getResources().getDisplayMetrics());
+        int height = TypedValue.complexToDimensionPixelSize(typedValue.data,
+                context.getResources().getDisplayMetrics());
         this.iconSize = Math.round(height * context.getResources().getDisplayMetrics().density + 0.5f);
 
         setHasStableIds(true);
@@ -362,8 +369,8 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> im
             GlideApp.with(holder.itemView.getContext())
                     .applyDefaultRequestOptions(new RequestOptions().format(DecodeFormat.PREFER_RGB_565))
                     .load(uri)
-                    //.diskCacheStrategy(DiskCacheStrategy.NONE)
-                    //.skipMemoryCache(true)
+                    // .diskCacheStrategy(DiskCacheStrategy.NONE)
+                    // .skipMemoryCache(true)
                     .override(iconSize, iconSize)
                     .into(holder.ivIcon);
         }
@@ -448,7 +455,8 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> im
 
         holder.tvRoaming.setTextColor(rule.apply ? colorOff : colorGrayed);
         holder.tvRoaming.setAlpha(otherActive ? 1 : 0.5f);
-        holder.tvRoaming.setVisibility(rule.roaming && (!rule.other_blocked || rule.screen_other) ? View.VISIBLE : View.INVISIBLE);
+        holder.tvRoaming.setVisibility(
+                rule.roaming && (!rule.other_blocked || rule.screen_other) ? View.VISIBLE : View.INVISIBLE);
 
         holder.tvRemarkMessaging.setVisibility(messaging.contains(rule.packageName) ? View.VISIBLE : View.GONE);
         holder.tvRemarkDownload.setVisibility(download.contains(rule.packageName) ? View.VISIBLE : View.GONE);
@@ -641,7 +649,8 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> im
                 cbLogging.setChecked(log_app);
                 cbFiltering.setChecked(filter);
                 cbFiltering.setEnabled(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP);
-                tvFilter4.setVisibility(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? View.GONE : View.VISIBLE);
+                tvFilter4.setVisibility(
+                        Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP ? View.GONE : View.VISIBLE);
                 cbNotify.setChecked(notify_access);
                 cbNotify.setEnabled(log_app);
 
@@ -653,8 +662,8 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> im
                         if (!checked) {
                             cbNotify.setChecked(false);
                             prefs.edit().putBoolean("notify_access", false).apply();
-                            ServiceSinkhole.reload("changed notify", context, false);
                         }
+                        ServiceSinkhole.reload("changed notify", context, false);
                         AdapterRule.this.notifyDataSetChanged();
                     }
                 });
@@ -728,18 +737,22 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> im
                     popup.getMenu().findItem(R.id.menu_host).setEnabled(multiple);
 
                     // Whois
-                    final Intent lookupIP = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.dnslytics.com/whois-lookup/" + daddr));
+                    final Intent lookupIP = new Intent(Intent.ACTION_VIEW,
+                            Uri.parse("https://www.dnslytics.com/whois-lookup/" + daddr));
                     if (pm.resolveActivity(lookupIP, 0) == null)
                         popup.getMenu().removeItem(R.id.menu_whois);
                     else
-                        popup.getMenu().findItem(R.id.menu_whois).setTitle(context.getString(R.string.title_log_whois, daddr));
+                        popup.getMenu().findItem(R.id.menu_whois)
+                                .setTitle(context.getString(R.string.title_log_whois, daddr));
 
                     // Lookup port
-                    final Intent lookupPort = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.speedguide.net/port.php?port=" + dport));
+                    final Intent lookupPort = new Intent(Intent.ACTION_VIEW,
+                            Uri.parse("https://www.speedguide.net/port.php?port=" + dport));
                     if (dport <= 0 || pm.resolveActivity(lookupPort, 0) == null)
                         popup.getMenu().removeItem(R.id.menu_port);
                     else
-                        popup.getMenu().findItem(R.id.menu_port).setTitle(context.getString(R.string.title_log_port, dport));
+                        popup.getMenu().findItem(R.id.menu_port)
+                                .setTitle(context.getString(R.string.title_log_port, dport));
 
                     popup.getMenu().findItem(R.id.menu_time).setTitle(
                             SimpleDateFormat.getDateTimeInstance().format(time));
@@ -779,7 +792,8 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> im
                                     break;
 
                                 case R.id.menu_copy:
-                                    ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                                    ClipboardManager clipboard = (ClipboardManager) context
+                                            .getSystemService(Context.CLIPBOARD_SERVICE);
                                     ClipData clip = ClipData.newPlainText("netguard", daddr);
                                     clipboard.setPrimaryClip(clip);
                                     return true;
@@ -852,8 +866,8 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> im
     public void onViewRecycled(ViewHolder holder) {
         super.onViewRecycled(holder);
 
-        //Context context = holder.itemView.getContext();
-        //GlideApp.with(context).clear(holder.ivIcon);
+        // Context context = holder.itemView.getContext();
+        // GlideApp.with(context).clear(holder.ivIcon);
 
         CursorAdapter adapter = (CursorAdapter) holder.lvAccess.getAdapter();
         if (adapter != null) {

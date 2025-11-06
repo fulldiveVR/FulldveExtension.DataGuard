@@ -1,30 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  ~     This file is part of NetGuard.
-  ~     NetGuard is free software: you can redistribute it and/or modify
-  ~     it under the terms of the GNU General Public License as published by
-  ~     the Free Software Foundation, either version 3 of the License, or
-  ~     (at your option) any later version.
-  ~     NetGuard is distributed in the hope that it will be useful,
-  ~     but WITHOUT ANY WARRANTY; without even the implied warranty of
-  ~     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  ~     GNU General Public License for more details.
-  ~     You should have received a copy of the GNU General Public License
-  ~     along with NetGuard.  If not, see <http://www.gnu.org/licenses/>.
-  ~     Copyright 2015-2019 by Marcel Bokhorst (M66B)
-  -->
-
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:ads="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingEnd="@dimen/activity_horizontal_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingStart="@dimen/activity_horizontal_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
+    android:paddingEnd="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingBottom="@dimen/activity_vertical_margin"
     tools:context=".ActivityMain">
 
     <LinearLayout
@@ -41,6 +26,19 @@
             android:textAppearance="@style/TextMedium"
             android:textColor="?attr/colorOff"
             android:visibility="gone" />
+
+        <TextView
+            android:id="@+id/tvNotifications"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:drawableStart="@drawable/twotone_notifications_24"
+            android:drawablePadding="8dp"
+            android:drawableTint="?attr/colorError"
+            android:padding="8dp"
+            android:text="@string/msg_notifications"
+            android:textAppearance="@style/TextSmall"
+            android:textColor="?attr/colorOff"
+            android:visibility="visible" />
 
         <LinearLayout
             android:id="@+id/llUsage"
@@ -63,36 +61,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:layout_marginLeft="8dp"
                 android:layout_marginStart="8dp"
-                android:text="@android:string/ok"
-                android:textAppearance="@style/TextSmall" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/llFairEmail"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:padding="8dp"
-            android:visibility="gone">
-
-            <TextView
-                android:id="@+id/tvFairEmail"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
-                android:layout_weight="1"
-                android:text="@string/msg_fairemail"
-                android:textAppearance="@style/TextSmall" />
-
-            <Button
-                android:id="@+id/btnFairEmail"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_vertical"
                 android:layout_marginLeft="8dp"
-                android:layout_marginStart="8dp"
                 android:text="@android:string/ok"
                 android:textAppearance="@style/TextSmall" />
         </LinearLayout>
@@ -132,8 +102,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:layout_marginLeft="8dp"
                 android:layout_marginStart="8dp"
+                android:layout_marginLeft="8dp"
                 android:text="@android:string/ok"
                 android:textAppearance="@style/TextMedium" />
         </LinearLayout>
@@ -159,8 +129,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:layout_marginLeft="8dp"
                 android:layout_marginStart="8dp"
+                android:layout_marginLeft="8dp"
                 android:text="@android:string/ok"
                 android:textAppearance="@style/TextSmall" />
         </LinearLayout>
@@ -186,19 +156,18 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_vertical"
-                android:layout_marginLeft="8dp"
                 android:layout_marginStart="8dp"
+                android:layout_marginLeft="8dp"
                 android:text="@android:string/ok"
                 android:textAppearance="@style/TextSmall" />
         </LinearLayout>
-
     </LinearLayout>
 
     <View
         android:id="@+id/vwPopupAnchor"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true"
-        android:layout_alignParentRight="true" />
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true" />
 </RelativeLayout>

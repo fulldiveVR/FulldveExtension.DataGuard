@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with NetGuard.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2015-2019 by Marcel Bokhorst (M66B)
+    Copyright 2015-2025 by Marcel Bokhorst (M66B)
 */
 
 #include "netguard.h"
@@ -275,10 +275,11 @@ void *handle_events(void *a) {
         log_android(ANDROID_LOG_ERROR,
                     "epoll close error %d: %s", errno, strerror(errno));
 
+    log_android(ANDROID_LOG_WARN, "Stopped events tun=%d", args->tun);
+
     // Cleanup
     ng_free(args, __FILE__, __LINE__);
 
-    log_android(ANDROID_LOG_WARN, "Stopped events tun=%d", args->tun);
     return NULL;
 }
 

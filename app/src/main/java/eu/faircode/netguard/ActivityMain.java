@@ -1,20 +1,25 @@
-/*
- *     This file is part of NetGuard.
- *     NetGuard is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
- *     NetGuard is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
- *     You should have received a copy of the GNU General Public License
- *     along with NetGuard.  If not, see <http://www.gnu.org/licenses/>.
- *     Copyright 2015-2019 by Marcel Bokhorst (M66B)
- */
-
 package eu.faircode.netguard;
 
+/*
+    This file is part of NetGuard.
+
+    NetGuard is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    NetGuard is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with NetGuard.  If not, see <http://www.gnu.org/licenses/>.
+
+    Copyright 2015-2025 by Marcel Bokhorst (M66B)
+*/
+
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -31,8 +36,13 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
+import android.text.SpannableString;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 import android.text.TextUtils;
 import android.text.method.LinkMovementMethod;
+import android.text.style.ImageSpan;
+import android.text.style.UnderlineSpan;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -54,6 +64,8 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
@@ -61,15 +73,10 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
-import eu.faircode.netguard.BuildConfig;
-import eu.faircode.netguard.R;
-import com.fulldive.startapppopups.PopupManager;
-import com.fulldive.startapppopups.donation.DonationManager;
-
+import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.List;
-import java.util.Locale;
-
-import eu.faircode.netguard.appextension.AppExtensionWorkType;
 
 public class ActivityMain extends AppCompatActivity implements SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = "NetGuard.Main";
@@ -90,8 +97,8 @@ public class ActivityMain extends AppCompatActivity implements SharedPreferences
 
     private static final int REQUEST_VPN = 1;
     private static final int REQUEST_INVITE = 2;
-    private static final int REQUEST_LOGCAT = 3;
-    public static final int REQUEST_ROAMING = 4;
+    public static final int REQUEST_ROAMING = 3;
+    private static final int REQUEST_NOTIFICATIONS = 4;
 
     private static final int MIN_SDK = Build.VERSION_CODES.LOLLIPOP_MR1;
 
@@ -101,10 +108,11 @@ public class ActivityMain extends AppCompatActivity implements SharedPreferences
     public static final String EXTRA_SEARCH = "Search";
     public static final String EXTRA_RELATED = "Related";
     public static final String EXTRA_APPROVE = "Approve";
-    public static final String EXTRA_LOGCAT = "Logcat";
     public static final String EXTRA_CONNECTED = "Connected";
     public static final String EXTRA_METERED = "Metered";
     public static final String EXTRA_SIZE = "Size";
+
+    private static final String MALWARE_URL = "https://urlhaus.abuse.ch/downloads/hostfile/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -197,11 +205,13 @@ public class ActivityMain extends AppCompatActivity implements SharedPreferences
                             if (getPackageName().equals(alwaysOn)) {
                                 if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q &&
                                         prefs.getBoolean("filter", false)) {
-                                    int lockdown = Settings.Secure.getInt(getContentResolver(), "always_on_vpn_lockdown", 0);
+                                    int lockdown = Settings.Secure.getInt(getContentResolver(),
+                                            "always_on_vpn_lockdown", 0);
                                     Log.i(TAG, "Lockdown=" + lockdown);
                                     if (lockdown != 0) {
                                         swEnabled.setChecked(false);
-                                        Toast.makeText(ActivityMain.this, R.string.msg_always_on_lockdown, Toast.LENGTH_LONG).show();
+                                        Toast.makeText(ActivityMain.this, R.string.msg_always_on_lockdown,
+                                                Toast.LENGTH_LONG).show();
                                         return;
                                     }
                                 }
@@ -291,6 +301,17 @@ public class ActivityMain extends AppCompatActivity implements SharedPreferences
         TextView tvDisabled = findViewById(R.id.tvDisabled);
         tvDisabled.setVisibility(enabled ? View.GONE : View.VISIBLE);
 
+        // Notification permissions
+        TextView tvNotifications = findViewById(R.id.tvNotifications);
+        tvNotifications.setVisibility(View.GONE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            tvNotifications.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    requestPermissions(new String[] { Manifest.permission.POST_NOTIFICATIONS }, REQUEST_NOTIFICATIONS);
+                }
+            });
+
         // Application list
         RecyclerView rvApplication = findViewById(R.id.rvApplication);
         rvApplication.setHasFixedSize(false);
@@ -329,20 +350,6 @@ public class ActivityMain extends AppCompatActivity implements SharedPreferences
             }
         });
 
-//        final LinearLayout llFairEmail = findViewById(R.id.llFairEmail);
-//        TextView tvFairEmail = findViewById(R.id.tvFairEmail);
-//        tvFairEmail.setMovementMethod(LinkMovementMethod.getInstance());
-//        Button btnFairEmail = findViewById(R.id.btnFairEmail);
-//        boolean hintFairEmail = prefs.getBoolean("hint_fairemail", true);
-//        llFairEmail.setVisibility(hintFairEmail ? View.VISIBLE : View.GONE);
-//        btnFairEmail.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                prefs.edit().putBoolean("hint_fairemail", false).apply();
-//                llFairEmail.setVisibility(View.GONE);
-//            }
-//        });
-
         showHints();
 
         // Listen for preference changes
@@ -361,7 +368,7 @@ public class ActivityMain extends AppCompatActivity implements SharedPreferences
         intentFilter.addAction(Intent.ACTION_PACKAGE_ADDED);
         intentFilter.addAction(Intent.ACTION_PACKAGE_REMOVED);
         intentFilter.addDataScheme("package");
-        registerReceiver(packageChangedReceiver, intentFilter);
+        ContextCompat.registerReceiver(this, packageChangedReceiver, intentFilter, ContextCompat.RECEIVER_NOT_EXPORTED);
 
         // First use
         if (!initialized) {
@@ -408,31 +415,8 @@ public class ActivityMain extends AppCompatActivity implements SharedPreferences
         // Fill application list
         updateApplicationList(getIntent().getStringExtra(EXTRA_SEARCH));
 
-
         // Handle intent
         checkExtras(getIntent());
-
-        new PopupManager().onAppStarted(
-                this,
-                BuildConfig.APPLICATION_ID,
-                true,
-                true,
-                true,
-                0,
-                (action) -> {
-                    return null;
-                }
-        );
-        String workType = getIntent().getAction();
-        if (workType != null && workType.equals(AppExtensionWorkType.OPEN.INSTANCE.getId())) {
-            final Intent prepareIntent = VpnService.prepare(this);
-            if (prepareIntent != null) {
-                try {
-                    startActivityForResult(prepareIntent, REQUEST_VPN);
-                } catch (Exception ignored) {
-                }
-            }
-        }
     }
 
     @Override
@@ -468,7 +452,32 @@ public class ActivityMain extends AppCompatActivity implements SharedPreferences
         if (adapter != null)
             adapter.notifyDataSetChanged();
 
+        PackageManager pm = getPackageManager();
+        boolean canNotify = (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+                (ContextCompat.checkSelfPermission(this,
+                        android.Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED));
+        TextView tvNotifications = findViewById(R.id.tvNotifications);
+        if (tvNotifications != null)
+            tvNotifications.setVisibility(canNotify ? View.GONE : View.VISIBLE);
+
         super.onResume();
+
+        if (Build.VERSION.SDK_INT > Build.VERSION_CODES.R && false) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            if (!prefs.getBoolean("qap", false))
+                if (Util.isPlayStoreInstall(this)) {
+                    new AlertDialog.Builder(this)
+                            .setMessage(R.string.app_qap)
+                            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    prefs.edit().putBoolean("qap", true).apply();
+                                }
+                            })
+                            .show();
+                } else
+                    prefs.edit().putBoolean("qap", true).apply();
+        }
     }
 
     @Override
@@ -530,14 +539,13 @@ public class ActivityMain extends AppCompatActivity implements SharedPreferences
             dialogAbout = null;
         }
 
-        DonationManager.INSTANCE.destroy();
-
         super.onDestroy();
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
-        Log.i(TAG, "onActivityResult request=" + requestCode + " result=" + requestCode + " ok=" + (resultCode == RESULT_OK));
+        Log.i(TAG, "onActivityResult request=" + requestCode + " result=" + requestCode + " ok="
+                + (resultCode == RESULT_OK));
         Util.logExtras(data);
 
         if (requestCode == REQUEST_VPN) {
@@ -558,16 +566,6 @@ public class ActivityMain extends AppCompatActivity implements SharedPreferences
         } else if (requestCode == REQUEST_INVITE) {
             // Do nothing
 
-        } else if (requestCode == REQUEST_LOGCAT) {
-            // Send logcat by e-mail
-            if (resultCode == RESULT_OK) {
-                Uri target = data.getData();
-                if (data.hasExtra("org.openintents.extra.DIR_PATH"))
-                    target = Uri.parse(target + "/logcat.txt");
-                Log.i(TAG, "Export URI=" + target);
-                Util.sendLogcat(target, this);
-            }
-
         } else {
             Log.w(TAG, "Unknown activity result request=" + requestCode);
             super.onActivityResult(requestCode, resultCode, data);
@@ -575,11 +573,25 @@ public class ActivityMain extends AppCompatActivity implements SharedPreferences
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_ROAMING)
+        if (requestCode == REQUEST_ROAMING) {
             if (grantResults[0] == PackageManager.PERMISSION_GRANTED)
                 ServiceSinkhole.reload("permission granted", this, false);
+        } else if (requestCode == REQUEST_NOTIFICATIONS) {
+            if (grantResults[0] != PackageManager.PERMISSION_GRANTED &&
+                    !ActivityCompat.shouldShowRequestPermissionRationale(this,
+                            Manifest.permission.POST_NOTIFICATIONS))
+                try {
+                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                    Uri uri = Uri.fromParts("package", getPackageName(), null);
+                    intent.setData(uri);
+                    startActivity(intent);
+                } catch (Throwable ex) {
+                    Log.e(TAG, ex + "\n" + ex.getStackTrace());
+                }
+        }
     }
 
     @Override
@@ -617,7 +629,8 @@ public class ActivityMain extends AppCompatActivity implements SharedPreferences
             boolean whitelist_wifi = prefs.getBoolean("whitelist_wifi", false);
             boolean whitelist_other = prefs.getBoolean("whitelist_other", false);
             boolean hintWhitelist = prefs.getBoolean("hint_whitelist", true);
-            llWhitelist.setVisibility(!(whitelist_wifi || whitelist_other) && screen_on && hintWhitelist ? View.VISIBLE : View.GONE);
+            llWhitelist.setVisibility(
+                    !(whitelist_wifi || whitelist_other) && screen_on && hintWhitelist ? View.VISIBLE : View.GONE);
 
         } else if ("manage_system".equals(name)) {
             invalidateOptionsMenu();
@@ -661,7 +674,8 @@ public class ActivityMain extends AppCompatActivity implements SharedPreferences
                             adapter.setMobileActive();
                         else
                             adapter.setWifiActive();
-                        ivMetered.setVisibility(Util.isMeteredNetwork(ActivityMain.this) ? View.VISIBLE : View.INVISIBLE);
+                        ivMetered.setVisibility(
+                                Util.isMeteredNetwork(ActivityMain.this) ? View.VISIBLE : View.INVISIBLE);
                     } else {
                         adapter.setDisconnected();
                         ivMetered.setVisibility(View.INVISIBLE);
@@ -758,6 +772,8 @@ public class ActivityMain extends AppCompatActivity implements SharedPreferences
     public boolean onPrepareOptionsMenu(Menu menu) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
 
+        menu.findItem(R.id.menu_malware).setVisible(false);
+
         if (prefs.getBoolean("manage_system", false)) {
             menu.findItem(R.id.menu_app_user).setChecked(prefs.getBoolean("show_user", true));
             menu.findItem(R.id.menu_app_system).setChecked(prefs.getBoolean("show_system", false));
@@ -777,6 +793,7 @@ public class ActivityMain extends AppCompatActivity implements SharedPreferences
             menu.findItem(R.id.menu_sort_name).setChecked(true);
 
         menu.findItem(R.id.menu_lockdown).setChecked(prefs.getBoolean("lockdown", false));
+        menu.findItem(R.id.menu_malware).setChecked(prefs.getBoolean("malware", false));
 
         return super.onPrepareOptionsMenu(menu);
     }
@@ -822,6 +839,10 @@ public class ActivityMain extends AppCompatActivity implements SharedPreferences
                 menu_lockdown(item);
                 return true;
 
+            case R.id.menu_malware:
+                menu_malware(item);
+                return true;
+
             case R.id.menu_log:
                 if (Util.canFilter(this))
                     startActivity(new Intent(this, ActivityLog.class));
@@ -837,17 +858,9 @@ public class ActivityMain extends AppCompatActivity implements SharedPreferences
                 menu_legend();
                 return true;
 
-//            case R.id.menu_support:
-//                startActivity(getIntentSupport());
-//                return true;
-
             case R.id.menu_about:
                 menu_about();
                 return true;
-
-//            case R.id.menu_apps:
-//                menu_apps();
-//                return true;
 
             default:
                 return super.onOptionsItemSelected(item);
@@ -864,7 +877,8 @@ public class ActivityMain extends AppCompatActivity implements SharedPreferences
         boolean whitelist_wifi = prefs.getBoolean("whitelist_wifi", false);
         boolean whitelist_other = prefs.getBoolean("whitelist_other", false);
         boolean hintWhitelist = prefs.getBoolean("hint_whitelist", true);
-        llWhitelist.setVisibility(!(whitelist_wifi || whitelist_other) && hintWhitelist && !hintUsage ? View.VISIBLE : View.GONE);
+        llWhitelist.setVisibility(
+                !(whitelist_wifi || whitelist_other) && hintWhitelist && !hintUsage ? View.VISIBLE : View.GONE);
         btnWhitelist.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -906,13 +920,6 @@ public class ActivityMain extends AppCompatActivity implements SharedPreferences
         if (intent.hasExtra(EXTRA_APPROVE)) {
             Log.i(TAG, "Requesting VPN approval");
             swEnabled.toggle();
-        }
-
-        if (intent.hasExtra(EXTRA_LOGCAT)) {
-            Log.i(TAG, "Requesting logcat");
-            Intent logcat = getIntentLogcat();
-            if (logcat.resolveActivity(getPackageManager()) != null)
-                startActivityForResult(logcat, REQUEST_LOGCAT);
         }
     }
 
@@ -970,28 +977,13 @@ public class ActivityMain extends AppCompatActivity implements SharedPreferences
 
     private void checkDoze() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Intent doze;
-            int textId;
-            if (Build.MANUFACTURER.toLowerCase(Locale.ROOT).equals("meizu")) {
-                doze = new Intent("com.meizu.safe.security.SHOW_APPSEC");
-                doze.addCategory(Intent.CATEGORY_DEFAULT);
-                doze.putExtra("packageName", BuildConfig.APPLICATION_ID);
-                textId = R.string.msg_doze_meizu;
-            } else {
-                doze = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
-                textId = R.string.msg_doze;
-            }
-
+            final Intent doze = new Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS);
             if (Util.batteryOptimizing(this) && getPackageManager().resolveActivity(doze, 0) != null) {
                 final SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
                 if (!prefs.getBoolean("nodoze", false)) {
                     LayoutInflater inflater = LayoutInflater.from(this);
                     View view = inflater.inflate(R.layout.doze, null, false);
                     final CheckBox cbDontAsk = view.findViewById(R.id.cbDontAsk);
-                    final TextView textView = view.findViewById(R.id.textView);
-                    if (textView != null) {
-                        textView.setText(textId);
-                    }
                     dialogDoze = new AlertDialog.Builder(this)
                             .setView(view)
                             .setCancelable(true)
@@ -1105,7 +1097,6 @@ public class ActivityMain extends AppCompatActivity implements SharedPreferences
             DrawableCompat.setTint(wrapHostBlocked, colorOff);
         }
 
-
         // Show dialog
         dialogLegend = new AlertDialog.Builder(this)
                 .setView(view)
@@ -1128,6 +1119,42 @@ public class ActivityMain extends AppCompatActivity implements SharedPreferences
         WidgetLockdown.updateWidgets(this);
     }
 
+    private void menu_malware(MenuItem item) {
+        item.setChecked(!item.isChecked());
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        prefs.edit().putBoolean("malware", item.isChecked()).apply();
+        if (item.isChecked())
+            try {
+                final File file = new File(getFilesDir(), "malware.txt");
+                new DownloadTask(this, new URL(MALWARE_URL), file, new DownloadTask.Listener() {
+                    @Override
+                    public void onCompleted() {
+                        prefs.edit().putBoolean("filter", true).apply();
+                        ServiceSinkhole.reload("malware download", ActivityMain.this, false);
+                    }
+
+                    @Override
+                    public void onCancelled() {
+                        prefs.edit().putBoolean("malware", false).apply();
+                    }
+
+                    @Override
+                    public void onException(Throwable ex) {
+                        Toast.makeText(ActivityMain.this, ex.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                }).executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+            } catch (MalformedURLException ex) {
+                Toast.makeText(this, ex.toString(), Toast.LENGTH_LONG).show();
+            }
+        else {
+            SharedPreferences.Editor editor = prefs.edit();
+            for (String key : prefs.getAll().keySet())
+                if (key.startsWith("malware."))
+                    editor.remove(key);
+            editor.apply();
+        }
+    }
+
     private void menu_about() {
         // Create view
         LayoutInflater inflater = LayoutInflater.from(this);
@@ -1148,31 +1175,9 @@ public class ActivityMain extends AppCompatActivity implements SharedPreferences
         tvEula.setMovementMethod(LinkMovementMethod.getInstance());
         tvPrivacy.setMovementMethod(LinkMovementMethod.getInstance());
 
-        // Handle logcat
-        view.setOnClickListener(new View.OnClickListener() {
-            private short tap = 0;
-            private Toast toast = Toast.makeText(ActivityMain.this, "", Toast.LENGTH_SHORT);
-
-            @Override
-            public void onClick(View view) {
-                tap++;
-                if (tap == 7) {
-                    tap = 0;
-                    toast.cancel();
-
-                    Intent intent = getIntentLogcat();
-                    if (intent.resolveActivity(getPackageManager()) != null)
-                        startActivityForResult(intent, REQUEST_LOGCAT);
-
-                } else if (tap > 3) {
-                    toast.setText(Integer.toString(7 - tap));
-                    toast.show();
-                }
-            }
-        });
-
         // Handle rate
-        btnRate.setVisibility(getIntentRate(this).resolveActivity(getPackageManager()) == null ? View.GONE : View.VISIBLE);
+        btnRate.setVisibility(
+                getIntentRate(this).resolveActivity(getPackageManager()) == null ? View.GONE : View.VISIBLE);
         btnRate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -1197,25 +1202,8 @@ public class ActivityMain extends AppCompatActivity implements SharedPreferences
     private static Intent getIntentRate(Context context) {
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("market://details?id=" + context.getPackageName()));
         if (intent.resolveActivity(context.getPackageManager()) == null)
-            intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://play.google.com/store/apps/details?id=" + context.getPackageName()));
-        return intent;
-    }
-
-    private Intent getIntentLogcat() {
-        Intent intent;
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
-            if (Util.isPackageInstalled("org.openintents.filemanager", this)) {
-                intent = new Intent("org.openintents.action.PICK_DIRECTORY");
-            } else {
-                intent = new Intent(Intent.ACTION_VIEW);
-                intent.setData(Uri.parse("https://play.google.com/store/apps/details?id=org.openintents.filemanager"));
-            }
-        } else {
-            intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
-            intent.setType("text/plain");
-            intent.putExtra(Intent.EXTRA_TITLE, "logcat.txt");
-        }
+            intent = new Intent(Intent.ACTION_VIEW,
+                    Uri.parse("https://play.google.com/store/apps/details?id=" + context.getPackageName()));
         return intent;
     }
 }

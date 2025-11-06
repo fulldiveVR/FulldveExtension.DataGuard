@@ -4,6 +4,7 @@
 /.idea
 /.idea/workspace.xml
 /.idea/libraries
+/.vscode
 .DS_Store
 /build
 /captures
@@ -12,3 +13,8 @@
 /app/release
 /app/play
 keystore.properties
+crowdin.properties
+app/.cxx/
+flurrykey.txt
+googlekey.txt
+app/google-services.json

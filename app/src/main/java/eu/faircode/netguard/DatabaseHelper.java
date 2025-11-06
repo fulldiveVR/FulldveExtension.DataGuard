@@ -1,19 +1,23 @@
-/*
- *     This file is part of NetGuard.
- *     NetGuard is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
- *     NetGuard is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
- *     You should have received a copy of the GNU General Public License
- *     along with NetGuard.  If not, see <http://www.gnu.org/licenses/>.
- *     Copyright 2015-2019 by Marcel Bokhorst (M66B)
- */
-
 package eu.faircode.netguard;
+
+/*
+    This file is part of NetGuard.
+
+    NetGuard is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    NetGuard is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with NetGuard.  If not, see <http://www.gnu.org/licenses/>.
+
+    Copyright 2015-2025 by Marcel Bokhorst (M66B)
+*/
 
 import android.content.ContentValues;
 import android.content.Context;
@@ -42,7 +46,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String TAG = "NetGuard.Database";
 
     private static final String DB_NAME = "Netguard";
-    private static final int DB_VERSION = 21;
+    private static final int DB_VERSION = 22;
 
     private static boolean once = true;
     private static List<LogChangedListener> logChangedListeners = new ArrayList<>();
@@ -57,6 +61,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private final static int MSG_LOG = 1;
     private final static int MSG_ACCESS = 2;
     private final static int MSG_FORWARD = 3;
+
+    private final static long SYN_SNI_DELAY = 5000L;
 
     private SharedPreferences prefs;
     private ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
@@ -184,6 +190,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 ", aname TEXT NOT NULL" +
                 ", resource TEXT NOT NULL" +
                 ", ttl INTEGER" +
+                ", uid INTEGER" +
                 ");");
         db.execSQL("CREATE UNIQUE INDEX idx_dns ON dns(qname, aname, resource)");
         db.execSQL("CREATE INDEX idx_dns_resource ON dns(resource)");
@@ -343,6 +350,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 oldVersion = 21;
             }
 
+            if (oldVersion < 22) {
+                if (!columnExists(db, "dns", "uid"))
+                    db.execSQL("ALTER TABLE dns ADD COLUMN uid INTEGER");
+                oldVersion = 22;
+            }
+
             if (oldVersion == DB_VERSION) {
                 db.setVersion(oldVersion);
                 db.setTransactionSuccessful();
@@ -365,6 +378,29 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             SQLiteDatabase db = this.getWritableDatabase();
             db.beginTransactionNonExclusive();
             try {
+                if (packet.protocol == 6 /* TCP */ &&
+                        packet.daddr != null &&
+                        packet.dport > 0 &&
+                        packet.uid > 0 &&
+                        "sni".equals(packet.data)) {
+                    int deleted = db.delete("log", "time > ?" +
+                                    " AND protocol = ?" +
+                                    " AND version = ?" +
+                                    " AND flags = ?" +
+                                    " AND daddr = ?" +
+                                    " AND dport = ?" +
+                                    " AND uid = ?",
+                            new String[]{
+                                    Long.toString(packet.time - SYN_SNI_DELAY),
+                                    Integer.toString(packet.protocol),
+                                    Integer.toString(packet.version),
+                                    "S", // SYN
+                                    packet.daddr,
+                                    Integer.toString(packet.dport),
+                                    Integer.toString(packet.uid)
+                            });
+                    Log.i(TAG, "Deleted=" + deleted + " packet=" + packet + " dname=" + dname);
+                }
                 ContentValues cv = new ContentValues();
                 cv.put("time", packet.time);
                 cv.put("version", packet.version);
@@ -799,6 +835,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     cv.put("qname", rr.QName);
                     cv.put("aname", rr.AName);
                     cv.put("resource", rr.Resource);
+                    cv.put("uid", rr.uid);
 
                     if (db.insert("dns", null, cv) == -1)
                         Log.e(TAG, "Insert dns failed");
@@ -863,7 +900,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             String query = "SELECT d.qname";
             query += " FROM dns AS d";
             query += " WHERE d.resource = '" + ip.replace("'", "''") + "'";
-            query += " ORDER BY d.qname";
+            query += " ORDER BY (d.uid = " + uid + ") DESC, d.qname";
             query += " LIMIT 1";
             // There is no way to known for sure which domain name an app used, so just pick the first one
             return db.compileStatement(query).simpleQueryForString();

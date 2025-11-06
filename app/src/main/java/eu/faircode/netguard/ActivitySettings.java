@@ -1,19 +1,23 @@
-/*
- *     This file is part of NetGuard.
- *     NetGuard is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
- *     NetGuard is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
- *     You should have received a copy of the GNU General Public License
- *     along with NetGuard.  If not, see <http://www.gnu.org/licenses/>.
- *     Copyright 2015-2019 by Marcel Bokhorst (M66B)
- */
-
 package eu.faircode.netguard;
+
+/*
+    This file is part of NetGuard.
+
+    NetGuard is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    NetGuard is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with NetGuard.  If not, see <http://www.gnu.org/licenses/>.
+
+    Copyright 2015-2025 by Marcel Bokhorst (M66B)
+*/
 
 import android.Manifest;
 import android.annotation.TargetApi;
@@ -35,13 +39,17 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
+import android.preference.ListPreference;
 import android.preference.MultiSelectListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceGroup;
 import android.preference.PreferenceScreen;
 import android.preference.TwoStatePreference;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.style.ImageSpan;
 import android.util.Log;
 import android.util.Xml;
 import android.view.LayoutInflater;
@@ -53,14 +61,10 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NavUtils;
+import androidx.core.content.ContextCompat;
 import androidx.core.util.PatternsCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
-
-import eu.faircode.netguard.BuildConfig;
-import eu.faircode.netguard.R;
-import com.fulldive.startapppopups.PopupManager;
-import com.fulldive.startapppopups.donation.DonationManager;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -431,26 +435,6 @@ public class ActivitySettings extends AppCompatActivity implements SharedPrefere
         pref_technical_info.setOnPreferenceClickListener(listener);
         pref_technical_network.setOnPreferenceClickListener(listener);
         updateTechnicalInfo();
-
-        Preference donateUs = screen.findPreference("donate_us");
-        if (donateUs != null) {
-            donateUs.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-                @Override
-                public boolean onPreferenceClick(Preference preference) {
-                    DonationManager.INSTANCE.purchaseFromSettings(
-                            ActivitySettings.this,
-                            () -> {
-                                return null;
-                            },
-                            () -> {
-                                new PopupManager().showDonationSuccess(ActivitySettings.this);
-                                return null;
-                            }
-                    );
-                    return true;
-                }
-            });
-        }
     }
 
     @Override
@@ -467,12 +451,12 @@ public class ActivitySettings extends AppCompatActivity implements SharedPrefere
         IntentFilter ifInteractive = new IntentFilter();
         ifInteractive.addAction(Intent.ACTION_SCREEN_ON);
         ifInteractive.addAction(Intent.ACTION_SCREEN_OFF);
-        registerReceiver(interactiveStateReceiver, ifInteractive);
+        ContextCompat.registerReceiver(this, interactiveStateReceiver, ifInteractive, ContextCompat.RECEIVER_NOT_EXPORTED);
 
         // Listen for connectivity updates
         IntentFilter ifConnectivity = new IntentFilter();
         ifConnectivity.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-        registerReceiver(connectivityChangedReceiver, ifConnectivity);
+        ContextCompat.registerReceiver(this, connectivityChangedReceiver, ifConnectivity, ContextCompat.RECEIVER_NOT_EXPORTED);
     }
 
     @Override
@@ -511,6 +495,10 @@ public class ActivitySettings extends AppCompatActivity implements SharedPrefere
     @Override
     @TargetApi(Build.VERSION_CODES.M)
     public void onSharedPreferenceChanged(SharedPreferences prefs, String name) {
+        if ("show_stats".equals(name)) {
+            ((TwoStatePreference) getPreferenceScreen().findPreference(name)).setChecked(prefs.getBoolean(name, false));
+        }
+
         Object value = prefs.getAll().get(name);
         if (value instanceof String && "".equals(value))
             prefs.edit().remove(name).apply();
@@ -594,8 +582,12 @@ public class ActivitySettings extends AppCompatActivity implements SharedPrefere
         } else if ("log_app".equals(name)) {
             Intent ruleset = new Intent(ActivityMain.ACTION_RULES_CHANGED);
             LocalBroadcastManager.getInstance(this).sendBroadcast(ruleset);
+            ServiceSinkhole.reload("changed " + name, this, false);
 
-        } else if ("filter".equals(name)) {
+        } else if ("notify_access".equals(name))
+            ServiceSinkhole.reload("changed " + name, this, false);
+
+        else if ("filter".equals(name)) {
             // Show dialog
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && prefs.getBoolean(name, false)) {
                 LayoutInflater inflater = LayoutInflater.from(ActivitySettings.this);

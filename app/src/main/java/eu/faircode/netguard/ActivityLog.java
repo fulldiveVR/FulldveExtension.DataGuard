@@ -1,19 +1,23 @@
-/*
- *     This file is part of NetGuard.
- *     NetGuard is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
- *     NetGuard is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
- *     You should have received a copy of the GNU General Public License
- *     along with NetGuard.  If not, see <http://www.gnu.org/licenses/>.
- *     Copyright 2015-2019 by Marcel Bokhorst (M66B)
- */
-
 package eu.faircode.netguard;
+
+/*
+    This file is part of NetGuard.
+
+    NetGuard is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    NetGuard is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with NetGuard.  If not, see <http://www.gnu.org/licenses/>.
+
+    Copyright 2015-2025 by Marcel Bokhorst (M66B)
+*/
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -44,8 +48,6 @@ import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.NavUtils;
 import androidx.preference.PreferenceManager;
-
-import eu.faircode.netguard.R;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -130,7 +132,8 @@ public class ActivityLog extends AppCompatActivity implements SharedPreferences.
         boolean allowed = prefs.getBoolean("traffic_allowed", true);
         boolean blocked = prefs.getBoolean("traffic_blocked", true);
 
-        adapter = new AdapterLog(this, DatabaseHelper.getInstance(this).getLog(udp, tcp, other, allowed, blocked), resolve, organization);
+        adapter = new AdapterLog(this, DatabaseHelper.getInstance(this).getLog(udp, tcp, other, allowed, blocked),
+                resolve, organization);
         adapter.setFilterQueryProvider(new FilterQueryProvider() {
             public Cursor runQuery(CharSequence constraint) {
                 return DatabaseHelper.getInstance(ActivityLog.this).searchLog(constraint.toString());
@@ -155,12 +158,16 @@ public class ActivityLog extends AppCompatActivity implements SharedPreferences.
                 int version = cursor.getInt(cursor.getColumnIndex("version"));
                 int protocol = cursor.getInt(cursor.getColumnIndex("protocol"));
                 final String saddr = cursor.getString(cursor.getColumnIndex("saddr"));
-                final int sport = (cursor.isNull(cursor.getColumnIndex("sport")) ? -1 : cursor.getInt(cursor.getColumnIndex("sport")));
+                final int sport = (cursor.isNull(cursor.getColumnIndex("sport")) ? -1
+                        : cursor.getInt(cursor.getColumnIndex("sport")));
                 final String daddr = cursor.getString(cursor.getColumnIndex("daddr"));
-                final int dport = (cursor.isNull(cursor.getColumnIndex("dport")) ? -1 : cursor.getInt(cursor.getColumnIndex("dport")));
+                final int dport = (cursor.isNull(cursor.getColumnIndex("dport")) ? -1
+                        : cursor.getInt(cursor.getColumnIndex("dport")));
                 final String dname = cursor.getString(cursor.getColumnIndex("dname"));
-                final int uid = (cursor.isNull(cursor.getColumnIndex("uid")) ? -1 : cursor.getInt(cursor.getColumnIndex("uid")));
-                int allowed = (cursor.isNull(cursor.getColumnIndex("allowed")) ? -1 : cursor.getInt(cursor.getColumnIndex("allowed")));
+                final int uid = (cursor.isNull(cursor.getColumnIndex("uid")) ? -1
+                        : cursor.getInt(cursor.getColumnIndex("uid")));
+                int allowed = (cursor.isNull(cursor.getColumnIndex("allowed")) ? -1
+                        : cursor.getInt(cursor.getColumnIndex("allowed")));
 
                 // Get external address
                 InetAddress addr = null;
@@ -186,7 +193,8 @@ public class ActivityLog extends AppCompatActivity implements SharedPreferences.
 
                 // Application name
                 if (uid >= 0)
-                    popup.getMenu().findItem(R.id.menu_application).setTitle(TextUtils.join(", ", Util.getApplicationNames(uid, ActivityLog.this)));
+                    popup.getMenu().findItem(R.id.menu_application)
+                            .setTitle(TextUtils.join(", ", Util.getApplicationNames(uid, ActivityLog.this)));
                 else
                     popup.getMenu().removeItem(R.id.menu_application);
 
@@ -194,14 +202,16 @@ public class ActivityLog extends AppCompatActivity implements SharedPreferences.
                 popup.getMenu().findItem(R.id.menu_protocol).setTitle(Util.getProtocolName(protocol, version, false));
 
                 // Whois
-                final Intent lookupIP = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.dnslytics.com/whois-lookup/" + ip));
+                final Intent lookupIP = new Intent(Intent.ACTION_VIEW,
+                        Uri.parse("https://www.dnslytics.com/whois-lookup/" + ip));
                 if (pm.resolveActivity(lookupIP, 0) == null)
                     popup.getMenu().removeItem(R.id.menu_whois);
                 else
                     popup.getMenu().findItem(R.id.menu_whois).setTitle(getString(R.string.title_log_whois, ip));
 
                 // Lookup port
-                final Intent lookupPort = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.speedguide.net/port.php?port=" + port));
+                final Intent lookupPort = new Intent(Intent.ACTION_VIEW,
+                        Uri.parse("https://www.speedguide.net/port.php?port=" + port));
                 if (port <= 0 || pm.resolveActivity(lookupPort, 0) == null)
                     popup.getMenu().removeItem(R.id.menu_port);
                 else
@@ -255,24 +265,22 @@ public class ActivityLog extends AppCompatActivity implements SharedPreferences.
                                 Intent main = new Intent(ActivityLog.this, ActivityMain.class);
                                 main.putExtra(ActivityMain.EXTRA_SEARCH, Integer.toString(uid));
                                 startActivity(main);
-                            }
                                 return true;
-
+                            }
                             case R.id.menu_block: {
                                 DatabaseHelper.getInstance(ActivityLog.this).updateAccess(packet, dname, 1);
                                 ServiceSinkhole.reload("block host", ActivityLog.this, false);
                                 Intent main = new Intent(ActivityLog.this, ActivityMain.class);
                                 main.putExtra(ActivityMain.EXTRA_SEARCH, Integer.toString(uid));
                                 startActivity(main);
-                            }
                                 return true;
-
-                            case R.id.menu_copy:
+                            }
+                            case R.id.menu_copy: {
                                 ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
                                 ClipData clip = ClipData.newPlainText("netguard", dname == null ? daddr : dname);
                                 clipboard.setPrimaryClip(clip);
                                 return true;
-
+                            }
                             default:
                                 return false;
                         }
@@ -493,13 +501,8 @@ public class ActivityLog extends AppCompatActivity implements SharedPreferences.
                     }
                 }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 return true;
-//
-//            case R.id.menu_log_support:
-//                Intent intent = new Intent(Intent.ACTION_VIEW);
-//                intent.setData(Uri.parse("https://github.com/M66B/NetGuard/blob/master/FAQ.md#user-content-faq27"));
-//                if (getPackageManager().resolveActivity(intent, 0) != null)
-//                    startActivity(intent);
-//                return true;
+
+            // Removed menu_log_support - menu item doesn't exist
 
             default:
                 return super.onOptionsItemSelected(item);
@@ -514,11 +517,18 @@ public class ActivityLog extends AppCompatActivity implements SharedPreferences.
             boolean other = prefs.getBoolean("proto_other", true);
             boolean allowed = prefs.getBoolean("traffic_allowed", true);
             boolean blocked = prefs.getBoolean("traffic_blocked", true);
-            adapter.changeCursor(DatabaseHelper.getInstance(this).getLog(udp, tcp, other, allowed, blocked));
+
+            String query = null;
             if (menuSearch != null && menuSearch.isActionViewExpanded()) {
                 SearchView searchView = (SearchView) menuSearch.getActionView();
-                adapter.getFilter().filter(getUidForName(searchView.getQuery().toString()));
+                if (searchView != null)
+                    query = getUidForName(searchView.getQuery().toString());
             }
+
+            if (TextUtils.isEmpty(query))
+                adapter.changeCursor(DatabaseHelper.getInstance(this).getLog(udp, tcp, other, allowed, blocked));
+            else
+                adapter.changeCursor(DatabaseHelper.getInstance(ActivityLog.this).searchLog(query));
         }
     }
 
@@ -548,14 +558,16 @@ public class ActivityLog extends AppCompatActivity implements SharedPreferences.
             intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             intent.setType("application/octet-stream");
-            intent.putExtra(Intent.EXTRA_TITLE, "netguard_" + new SimpleDateFormat("yyyyMMdd").format(new Date().getTime()) + ".pcap");
+            intent.putExtra(Intent.EXTRA_TITLE,
+                    "netguard_" + new SimpleDateFormat("yyyyMMdd").format(new Date().getTime()) + ".pcap");
         }
         return intent;
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, final Intent data) {
-        Log.i(TAG, "onActivityResult request=" + requestCode + " result=" + requestCode + " ok=" + (resultCode == RESULT_OK));
+        Log.i(TAG, "onActivityResult request=" + requestCode + " result=" + requestCode + " ok="
+                + (resultCode == RESULT_OK));
 
         if (requestCode == REQUEST_PCAP) {
             if (resultCode == RESULT_OK && data != null)
