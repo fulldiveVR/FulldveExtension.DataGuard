@@ -3,6 +3,14 @@
 *NetGuard* provides simple and advanced ways to block access to the internet - no root required.
 Applications and addresses can individually be allowed or denied access to your Wi-Fi and/or mobile connection.
 
+<br>
+
+**WARNING: there is an app in the Samsung Galaxy app store "*Play Music - MP3 Music player*"
+with the same package name as NetGuard, which will be installed as update without your confirmation.
+This app is probably malicious and was reported to Samsung on December 8, 2021.**
+
+<br>
+
 Blocking access to the internet can help:
 
 * reduce your data usage
@@ -87,10 +95,16 @@ NetGuard will try to workaround this and remove the error message when it succee
 Some LineageOS versions have a broken Android VPN implementation, causing all traffic to be blocked,
 please see [this FAQ](https://github.com/M66B/NetGuard/blob/master/FAQ.md#user-content-faq51) for more information.
 
+On GrapheneOS, the Android *Always-On VPN* function and the sub option '*Block connections without VPN*' are enabled by default.
+However, this sub option will result in blocking all traffic, please see [this FAQ](https://github.com/M66B/NetGuard/blob/master/FAQ.md#user-content-faq51).
+
 NetGuard is not supported for apps installed in a [work profile](https://developer.android.com/work/managed-profiles),
 or in a [Secure Folder](https://www.samsung.com/uk/support/mobile-devices/what-is-the-secure-folder-and-how-do-i-use-it/) (Samsung),
-or as second instance (MIUI)
+or as second instance (MIUI), or as Parallel app (OnePlus), or as Xiaomi dual app
 because the Android VPN service too often does not work correctly in this situation, which can't be fixed by NetGuard.
+
+NetGuard is not supported for internet connections via a wire, like ethernet or USB,
+because the Android VPN service often doesn't work properly in this situation.
 
 Filtering mode cannot be used on [CopperheadOS](https://copperhead.co/android/).
 
@@ -102,7 +116,7 @@ If you disable this package, you can enable it with this command again:
 adb shell pm enable --user 0 com.android.vpndialogs
 ```
 
-NetGuard is supported for phones and tablets only, so not for other device types like on a television or in a car.
+NetGuard is supported on phones and tablets with a true-color screen only, so not for other device types like on a television or in a car.
 
 Android does not allow incoming connections (not the same as incoming traffic) and the Android VPN service has no support for this either.
 Therefore managing incoming connections for servers running on your device is not supported.
@@ -303,7 +317,7 @@ Frequently Asked Questions (FAQ)
 Support
 -------
 
-For questions, feature requests and bug reports, please [use this XDA-Developers forum thread](http://forum.xda-developers.com/showthread.php?t=3233012).
+For questions, feature requests and bug reports, please [use this form](https://contact.faircode.eu/?product=netguard%2B).
 
 There is support on the latest version of NetGuard only.
 

@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with NetGuard.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2015-2019 by Marcel Bokhorst (M66B)
+    Copyright 2015-2025 by Marcel Bokhorst (M66B)
 */
 
 #include "netguard.h"
@@ -120,6 +120,7 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
             }
         }
 
+        short svcb = 0;
         int32_t aoff = off;
         for (int a = 0; a < acount; a++) {
             off = get_qname(data, *datalen, (uint16_t) off, name);
@@ -147,11 +148,16 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
                                 return;
                         }
 
-                        dns_resolved(args, qname, name, rd, ttl);
+                        dns_resolved(args, qname, name, rd, ttl, -1);
                         log_android(ANDROID_LOG_DEBUG,
                                     "DNS answer %d qname %s qtype %d ttl %d data %s",
                                     a, name, qtype, ttl, rd);
-
+                    } else if (qclass == DNS_QCLASS_IN &&
+                               (qtype == DNS_SVCB || qtype == DNS_HTTPS)) {
+                        // https://tools.ietf.org/id/draft-ietf-dnsop-svcb-https-01.html
+                        svcb = 1;
+                        log_android(ANDROID_LOG_WARN,
+                                    "SVCB answer %d qname %s qtype %d", a, name, qtype);
                     } else
                         log_android(ANDROID_LOG_DEBUG,
                                     "DNS answer %d qname %s qclass %d qtype %d ttl %d length %d",
@@ -171,7 +177,8 @@ void parse_dns_response(const struct arguments *args, const struct ng_session *s
             }
         }
 
-        if (qcount > 0 && is_domain_blocked(args, qname)) {
+        if (qcount > 0 &&
+            (svcb || is_domain_blocked(args, qname))) {
             dns->qr = 1;
             dns->aa = 0;
             dns->tc = 0;

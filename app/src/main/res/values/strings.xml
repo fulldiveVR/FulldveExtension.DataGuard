@@ -4,14 +4,26 @@
 	It should not be modified by hand.
 -->
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="app_name" translatable="false">DataGuard</string>
     <string name="app_description">DataGuard provides simple and advanced ways to block access to the internet - no root required. Apps and addresses can individually be allowed or denied access to your Wi-Fi and/or mobile connection.</string>
+    <string name="app_copyright" translatable="false">Copyright \u00A9 Wize Browser</string>
     <string name="app_android">DataGuard requires Android 5.1 or later</string>
     <string name="app_xposed">Xposed causes too many crashes, which might result in DataGuard being removed from the Google Play Store, therefore DataGuard isn\'t supported while Xposed is installed</string>
+    <string name="app_eula" translatable="false">THIS SOFTWARE IS PROVIDED BY THE AUTHOR \'\'AS IS\'\' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</string>
     <string name="app_privacy" />
     <string name="app_first">Great care has been taken to develop and test DataGuard, however it is impossible to guarantee DataGuard will work correctly on every device.</string>
     <string name="app_agree">I agree</string>
     <string name="app_disagree">I disagree</string>
     <string name="app_support">DataGuard needs your help. Tap to purchase pro features to keep the project going.</string>
+    <string name="app_qap">
+        Google was going to remove the app from the Play Store because it requested permission to query all apps.
+        Five appeals and providing a good justification about why this permission is needed were rejected.
+        This version of the app does not request this permission anymore,
+        and despite that, almost all apps will still be listed,
+        except some (system) apps which cannot be started manually from the Android app list.
+        The internet traffic of these apps will always be allowed to make sure your device keeps working correctly.
+        If you think this is a problem, you can update to the GitHub version of the app and manage all (system) apps again.
+    </string>
     <string name="channel_foreground">Running services</string>
     <string name="channel_notify">General notifications</string>
     <string name="channel_access">Access notifications</string>
@@ -92,6 +104,7 @@
     <string name="setting_handover">Seamless VPN handover on reload</string>
     <string name="setting_clear_onreload">Close connections on reload</string>
     <string name="setting_lockdown">Lockdown traffic</string>
+    <string name="setting_malware" translatable="false">Malware protection</string>
     <string name="setting_track_usage">Track network usage</string>
     <string name="setting_reset_usage">Reset network usage</string>
     <string name="setting_show_resolved">Show resolved domain names</string>
@@ -160,9 +173,11 @@
     <string name="msg_hosts">%1$d allowed, %2$d blocked, %3$d hosts</string>
     <string name="msg_waiting">Waiting for event</string>
     <string name="msg_disabled">DataGuard is disabled, use the switch above to enable DataGuard</string>
+    <string name="msg_notifications">Tap to grant notification permissions (for access attempt notifications, error messages, etc.)</string>
     <string name="msg_revoked">DataGuard has been disabled, likely by using another VPN based app</string>
     <string name="msg_installed">\'%1$s\' installed</string>
     <string name="msg_installed_n">Has been installed</string>
+    <string name="msg_malware" translatable="false">Possible malware: \'%1$s\'</string>
     <string name="msg_access">%1$s attempted internet access</string>
     <string name="msg_access_n">Attempted internet access</string>
     <string name="msg_completed">Action completed</string>
@@ -277,6 +292,7 @@
     <string name="title_pro_reponse">Response</string>
     <string name="title_pro_feature">This is a pro feature</string>
     <string name="title_pro_subscription">A monthly subscriptions of 1 or 2 euros (excluding local taxes) will activate all pro features.         You can cancel or manage a subscription via the subscriptions tab in the Play store app.</string>
+    <string name="title_pro_already">The pro features are already activated</string>
     <string name="rate_submit">Rate</string>
     <string name="install_submit">Learn more</string>
     <string name="rate_cancel">Not now</string>

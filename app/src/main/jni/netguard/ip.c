@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with NetGuard.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2015-2019 by Marcel Bokhorst (M66B)
+    Copyright 2015-2025 by Marcel Bokhorst (M66B)
 */
 
 #include "netguard.h"
@@ -281,8 +281,28 @@ void handle_ip(const struct arguments *args,
         }
     }
 
-    // Get uid
     jint uid = -1;
+
+    // Get server name
+    char server_name[TLS_SNI_LENGTH + 1];
+    *server_name = 0;
+    if (protocol == IPPROTO_TCP) {
+        const struct tcphdr *tcphdr = (struct tcphdr *) payload;
+        const uint8_t tcpoptlen = (uint8_t) ((tcphdr->doff - 5) * 4);
+        const uint8_t *data = payload + sizeof(struct tcphdr) + tcpoptlen;
+        const uint16_t datalen = (const uint16_t) (length - (data - pkt));
+
+        if (get_sni(data, datalen, server_name)) {
+            log_android(ANDROID_LOG_INFO, "TLS server name: %s", server_name);
+            uid = get_uid(version, protocol, saddr, sport, daddr, dport);
+            dns_resolved(args, server_name, server_name, dest, -1, uid);
+        }
+    }
+
+    if (*server_name != 0)
+        strcpy(data, "sni");
+
+    // Get uid
     if (protocol == IPPROTO_ICMP || protocol == IPPROTO_ICMPV6 ||
         (protocol == IPPROTO_UDP && !has_udp_session(args, pkt, payload)) ||
         (protocol == IPPROTO_TCP && syn)) {
@@ -293,15 +313,15 @@ void handle_ip(const struct arguments *args,
     }
 
     log_android(ANDROID_LOG_DEBUG,
-                "Packet v%d %s/%u > %s/%u proto %d flags %s uid %d",
-                version, source, sport, dest, dport, protocol, flags, uid);
+                "Packet v%d %s/%u > %s/%u proto %d flags %s uid %d sni %s",
+                version, source, sport, dest, dport, protocol, flags, uid, server_name);
 
     // Check if allowed
     int allowed = 0;
     struct allowed *redirect = NULL;
     if (protocol == IPPROTO_UDP && has_udp_session(args, pkt, payload))
         allowed = 1; // could be a lingering/blocked session
-    else if (protocol == IPPROTO_TCP && (!syn || (uid == 0 && dport == 53)))
+    else if (protocol == IPPROTO_TCP && (!syn || (uid == 0 && dport == 53)) && *server_name == 0)
         allowed = 1; // assume existing session
     else {
         jobject objPacket = create_packet(
@@ -310,6 +330,8 @@ void handle_ip(const struct arguments *args,
         allowed = (redirect != NULL);
         if (redirect != NULL && (*redirect->raddr == 0 || redirect->rport == 0))
             redirect = NULL;
+        if (allowed && *server_name && is_domain_blocked(args, server_name))
+            allowed = 0;
     }
 
     // Handle allowed traffic
@@ -323,6 +345,8 @@ void handle_ip(const struct arguments *args,
     } else {
         if (protocol == IPPROTO_UDP)
             block_udp(args, pkt, length, payload, uid);
+        else if (protocol == IPPROTO_TCP && *server_name != 0 && !allowed)
+            handle_tcp(args, pkt, length, payload, uid, allowed, redirect, epoll_fd); // RST
 
         log_android(ANDROID_LOG_WARN, "Address v%d p%d %s/%u syn %d not allowed",
                     version, protocol, dest, dport, syn);

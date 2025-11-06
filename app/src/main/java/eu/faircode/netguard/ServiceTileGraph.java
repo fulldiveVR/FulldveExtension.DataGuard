@@ -1,19 +1,23 @@
-/*
- *     This file is part of NetGuard.
- *     NetGuard is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
- *     NetGuard is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
- *     You should have received a copy of the GNU General Public License
- *     along with NetGuard.  If not, see <http://www.gnu.org/licenses/>.
- *     Copyright 2015-2019 by Marcel Bokhorst (M66B)
- */
-
 package eu.faircode.netguard;
+
+/*
+    This file is part of NetGuard.
+
+    NetGuard is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    NetGuard is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with NetGuard.  If not, see <http://www.gnu.org/licenses/>.
+
+    Copyright 2015-2025 by Marcel Bokhorst (M66B)
+*/
 
 
 import android.annotation.TargetApi;
@@ -23,10 +27,9 @@ import android.os.Build;
 import android.service.quicksettings.Tile;
 import android.service.quicksettings.TileService;
 import android.util.Log;
+import android.widget.Toast;
 
 import androidx.preference.PreferenceManager;
-
-import eu.faircode.netguard.R;
 
 @TargetApi(Build.VERSION_CODES.N)
 public class ServiceTileGraph extends TileService implements SharedPreferences.OnSharedPreferenceChangeListener {
@@ -68,7 +71,10 @@ public class ServiceTileGraph extends TileService implements SharedPreferences.O
         // Check state
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         boolean stats = !prefs.getBoolean("show_stats", false);
-        prefs.edit().putBoolean("show_stats", stats).apply();
+        if (stats && !IAB.isPurchased(ActivityPro.SKU_SPEED, this))
+            Toast.makeText(this, R.string.title_pro_feature, Toast.LENGTH_SHORT).show();
+        else
+            prefs.edit().putBoolean("show_stats", stats).apply();
         ServiceSinkhole.reloadStats("tile", this);
     }
 }

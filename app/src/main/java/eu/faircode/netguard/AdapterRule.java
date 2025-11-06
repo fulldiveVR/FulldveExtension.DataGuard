@@ -1,19 +1,23 @@
-/*
- *     This file is part of NetGuard.
- *     NetGuard is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
- *     NetGuard is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
- *     You should have received a copy of the GNU General Public License
- *     along with NetGuard.  If not, see <http://www.gnu.org/licenses/>.
- *     Copyright 2015-2019 by Marcel Bokhorst (M66B)
- */
-
 package eu.faircode.netguard;
+
+/*
+    This file is part of NetGuard.
+
+    NetGuard is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    NetGuard is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with NetGuard.  If not, see <http://www.gnu.org/licenses/>.
+
+    Copyright 2015-2025 by Marcel Bokhorst (M66B)
+*/
 
 import android.annotation.TargetApi;
 import android.content.ClipData;
@@ -30,6 +34,9 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.ImageSpan;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -64,7 +71,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.load.DecodeFormat;
 import com.bumptech.glide.request.RequestOptions;
-import eu.faircode.netguard.R;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -653,8 +659,8 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> im
                         if (!checked) {
                             cbNotify.setChecked(false);
                             prefs.edit().putBoolean("notify_access", false).apply();
-                            ServiceSinkhole.reload("changed notify", context, false);
                         }
+                        ServiceSinkhole.reload("changed notify", context, false);
                         AdapterRule.this.notifyDataSetChanged();
                     }
                 });
@@ -727,6 +733,9 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> im
                     }
                     popup.getMenu().findItem(R.id.menu_host).setEnabled(multiple);
 
+                    markPro(context, popup.getMenu().findItem(R.id.menu_allow), ActivityPro.SKU_FILTER);
+                    markPro(context, popup.getMenu().findItem(R.id.menu_block), ActivityPro.SKU_FILTER);
+
                     // Whois
                     final Intent lookupIP = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.dnslytics.com/whois-lookup/" + daddr));
                     if (pm.resolveActivity(lookupIP, 0) == null)
@@ -761,14 +770,20 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> im
                                     break;
 
                                 case R.id.menu_allow:
-                                    DatabaseHelper.getInstance(context).setAccess(id, 0);
-                                    ServiceSinkhole.reload("allow host", context, false);
+                                    if (IAB.isPurchased(ActivityPro.SKU_FILTER, context)) {
+                                        DatabaseHelper.getInstance(context).setAccess(id, 0);
+                                        ServiceSinkhole.reload("allow host", context, false);
+                                    } else
+                                        context.startActivity(new Intent(context, ActivityPro.class));
                                     result = true;
                                     break;
 
                                 case R.id.menu_block:
-                                    DatabaseHelper.getInstance(context).setAccess(id, 1);
-                                    ServiceSinkhole.reload("block host", context, false);
+                                    if (IAB.isPurchased(ActivityPro.SKU_FILTER, context)) {
+                                        DatabaseHelper.getInstance(context).setAccess(id, 1);
+                                        ServiceSinkhole.reload("block host", context, false);
+                                    } else
+                                        context.startActivity(new Intent(context, ActivityPro.class));
                                     result = true;
                                     break;
 
@@ -860,6 +875,16 @@ public class AdapterRule extends RecyclerView.Adapter<AdapterRule.ViewHolder> im
             Log.i(TAG, "Closing access cursor");
             adapter.changeCursor(null);
             holder.lvAccess.setAdapter(null);
+        }
+    }
+
+    private void markPro(Context context, MenuItem menu, String sku) {
+        if (sku == null || !IAB.isPurchased(sku, context)) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+            boolean dark = prefs.getBoolean("dark_theme", false);
+            SpannableStringBuilder ssb = new SpannableStringBuilder("  " + menu.getTitle());
+            ssb.setSpan(new ImageSpan(context, dark ? R.drawable.ic_shopping_cart_white_24dp : R.drawable.ic_shopping_cart_black_24dp), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            menu.setTitle(ssb);
         }
     }
 

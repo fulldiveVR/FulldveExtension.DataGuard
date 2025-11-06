@@ -1,19 +1,23 @@
-/*
- *     This file is part of NetGuard.
- *     NetGuard is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
- *     NetGuard is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
- *     You should have received a copy of the GNU General Public License
- *     along with NetGuard.  If not, see <http://www.gnu.org/licenses/>.
- *     Copyright 2015-2019 by Marcel Bokhorst (M66B)
- */
-
 package eu.faircode.netguard;
+
+/*
+    This file is part of NetGuard.
+
+    NetGuard is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    NetGuard is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with NetGuard.  If not, see <http://www.gnu.org/licenses/>.
+
+    Copyright 2015-2025 by Marcel Bokhorst (M66B)
+*/
 
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -37,8 +41,6 @@ import android.widget.TextView;
 import androidx.core.graphics.drawable.DrawableCompat;
 import androidx.core.view.ViewCompat;
 import androidx.preference.PreferenceManager;
-
-import eu.faircode.netguard.R;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -204,7 +206,21 @@ public class AdapterLog extends CursorAdapter {
         // Application icon
         ApplicationInfo info = null;
         PackageManager pm = context.getPackageManager();
-        String[] pkg = pm.getPackagesForUid(uid);
+        String[] pkg = null;
+
+        try {
+            pkg = pm.getPackagesForUid(uid);
+        } catch (SecurityException ignored) {
+            // STACK_TRACE=java.lang.SecurityException: getPackagesForUid: UID 1010154 requires android.permission.INTERACT_ACROSS_USERS_FULL or android.permission.INTERACT_ACROSS_USERS to access user 0.
+            //   at android.os.Parcel.createExceptionOrNull(Parcel.java:3240)
+            //   at android.os.Parcel.createException(Parcel.java:3224)
+            //   at android.os.Parcel.readException(Parcel.java:3200)
+            //   at android.os.Parcel.readException(Parcel.java:3142)
+            //   at android.content.pm.IPackageManager$Stub$Proxy.getPackagesForUid(IPackageManager.java:5176)
+            //   at android.app.ApplicationPackageManager$3.recompute(ApplicationPackageManager.java:1148)
+            //   at android.app.ApplicationPackageManager$3.recompute(ApplicationPackageManager.java:1142)
+        }
+
         if (pkg != null && pkg.length > 0)
             try {
                 info = pm.getApplicationInfo(pkg[0], 0);

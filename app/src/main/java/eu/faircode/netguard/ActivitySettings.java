@@ -1,19 +1,23 @@
-/*
- *     This file is part of NetGuard.
- *     NetGuard is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
- *     NetGuard is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
- *     You should have received a copy of the GNU General Public License
- *     along with NetGuard.  If not, see <http://www.gnu.org/licenses/>.
- *     Copyright 2015-2019 by Marcel Bokhorst (M66B)
- */
-
 package eu.faircode.netguard;
+
+/*
+    This file is part of NetGuard.
+
+    NetGuard is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    NetGuard is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with NetGuard.  If not, see <http://www.gnu.org/licenses/>.
+
+    Copyright 2015-2025 by Marcel Bokhorst (M66B)
+*/
 
 import android.Manifest;
 import android.annotation.TargetApi;
@@ -35,13 +39,17 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.EditTextPreference;
+import android.preference.ListPreference;
 import android.preference.MultiSelectListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceGroup;
 import android.preference.PreferenceScreen;
 import android.preference.TwoStatePreference;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
 import android.text.TextUtils;
+import android.text.style.ImageSpan;
 import android.util.Log;
 import android.util.Xml;
 import android.view.LayoutInflater;
@@ -53,14 +61,10 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NavUtils;
+import androidx.core.content.ContextCompat;
 import androidx.core.util.PatternsCompat;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 import androidx.preference.PreferenceManager;
-
-import eu.faircode.netguard.BuildConfig;
-import eu.faircode.netguard.R;
-import com.fulldive.startapppopups.PopupManager;
-import com.fulldive.startapppopups.donation.DonationManager;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.InputSource;
@@ -432,25 +436,9 @@ public class ActivitySettings extends AppCompatActivity implements SharedPrefere
         pref_technical_network.setOnPreferenceClickListener(listener);
         updateTechnicalInfo();
 
-        Preference donateUs = screen.findPreference("donate_us");
-        if (donateUs != null) {
-            donateUs.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
-                @Override
-                public boolean onPreferenceClick(Preference preference) {
-                    DonationManager.INSTANCE.purchaseFromSettings(
-                            ActivitySettings.this,
-                            () -> {
-                                return null;
-                            },
-                            () -> {
-                                new PopupManager().showDonationSuccess(ActivitySettings.this);
-                                return null;
-                            }
-                    );
-                    return true;
-                }
-            });
-        }
+        markPro(screen.findPreference("theme"), ActivityPro.SKU_THEME);
+        markPro(screen.findPreference("install"), ActivityPro.SKU_NOTIFY);
+        markPro(screen.findPreference("show_stats"), ActivityPro.SKU_SPEED);
     }
 
     @Override
@@ -467,12 +455,12 @@ public class ActivitySettings extends AppCompatActivity implements SharedPrefere
         IntentFilter ifInteractive = new IntentFilter();
         ifInteractive.addAction(Intent.ACTION_SCREEN_ON);
         ifInteractive.addAction(Intent.ACTION_SCREEN_OFF);
-        registerReceiver(interactiveStateReceiver, ifInteractive);
+        ContextCompat.registerReceiver(this, interactiveStateReceiver, ifInteractive, ContextCompat.RECEIVER_NOT_EXPORTED);
 
         // Listen for connectivity updates
         IntentFilter ifConnectivity = new IntentFilter();
         ifConnectivity.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
-        registerReceiver(connectivityChangedReceiver, ifConnectivity);
+        ContextCompat.registerReceiver(this, connectivityChangedReceiver, ifConnectivity, ContextCompat.RECEIVER_NOT_EXPORTED);
     }
 
     @Override
@@ -511,6 +499,30 @@ public class ActivitySettings extends AppCompatActivity implements SharedPrefere
     @Override
     @TargetApi(Build.VERSION_CODES.M)
     public void onSharedPreferenceChanged(SharedPreferences prefs, String name) {
+        // Pro features
+        if ("theme".equals(name)) {
+            if (!"teal".equals(prefs.getString(name, "teal")) && !IAB.isPurchased(ActivityPro.SKU_THEME, this)) {
+                prefs.edit().putString(name, "teal").apply();
+                ((ListPreference) getPreferenceScreen().findPreference(name)).setValue("teal");
+                startActivity(new Intent(this, ActivityPro.class));
+                return;
+            }
+        } else if ("install".equals(name)) {
+            if (prefs.getBoolean(name, false) && !IAB.isPurchased(ActivityPro.SKU_NOTIFY, this)) {
+                prefs.edit().putBoolean(name, false).apply();
+                ((TwoStatePreference) getPreferenceScreen().findPreference(name)).setChecked(false);
+                startActivity(new Intent(this, ActivityPro.class));
+                return;
+            }
+        } else if ("show_stats".equals(name)) {
+            if (prefs.getBoolean(name, false) && !IAB.isPurchased(ActivityPro.SKU_SPEED, this)) {
+                prefs.edit().putBoolean(name, false).apply();
+                startActivity(new Intent(this, ActivityPro.class));
+                return;
+            }
+            ((TwoStatePreference) getPreferenceScreen().findPreference(name)).setChecked(prefs.getBoolean(name, false));
+        }
+
         Object value = prefs.getAll().get(name);
         if (value instanceof String && "".equals(value))
             prefs.edit().remove(name).apply();
@@ -594,8 +606,12 @@ public class ActivitySettings extends AppCompatActivity implements SharedPrefere
         } else if ("log_app".equals(name)) {
             Intent ruleset = new Intent(ActivityMain.ACTION_RULES_CHANGED);
             LocalBroadcastManager.getInstance(this).sendBroadcast(ruleset);
+            ServiceSinkhole.reload("changed " + name, this, false);
 
-        } else if ("filter".equals(name)) {
+        } else if ("notify_access".equals(name))
+            ServiceSinkhole.reload("changed " + name, this, false);
+
+        else if ("filter".equals(name)) {
             // Show dialog
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && prefs.getBoolean(name, false)) {
                 LayoutInflater inflater = LayoutInflater.from(ActivitySettings.this);
@@ -839,6 +855,16 @@ public class ActivitySettings extends AppCompatActivity implements SharedPrefere
             updateTechnicalInfo();
         }
     };
+
+    private void markPro(Preference pref, String sku) {
+        if (sku == null || !IAB.isPurchased(sku, this)) {
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            boolean dark = prefs.getBoolean("dark_theme", false);
+            SpannableStringBuilder ssb = new SpannableStringBuilder("  " + pref.getTitle());
+            ssb.setSpan(new ImageSpan(this, dark ? R.drawable.ic_shopping_cart_white_24dp : R.drawable.ic_shopping_cart_black_24dp), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            pref.setTitle(ssb);
+        }
+    }
 
     private void updateTechnicalInfo() {
         PreferenceScreen screen = getPreferenceScreen();
@@ -1348,6 +1374,18 @@ public class ActivitySettings extends AppCompatActivity implements SharedPrefere
                         enabled = Boolean.parseBoolean(value);
                     else {
                         if (current == application) {
+                            // Pro features
+                            if ("log".equals(key)) {
+                                if (!IAB.isPurchased(ActivityPro.SKU_LOG, context))
+                                    return;
+                            } else if ("theme".equals(key)) {
+                                if (!IAB.isPurchased(ActivityPro.SKU_THEME, context))
+                                    return;
+                            } else if ("show_stats".equals(key)) {
+                                if (!IAB.isPurchased(ActivityPro.SKU_SPEED, context))
+                                    return;
+                            }
+
                             if ("hosts_last_import".equals(key) || "hosts_last_download".equals(key))
                                 return;
                         }

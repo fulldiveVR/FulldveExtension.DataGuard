@@ -1,19 +1,23 @@
-/*
- *     This file is part of NetGuard.
- *     NetGuard is free software: you can redistribute it and/or modify
- *     it under the terms of the GNU General Public License as published by
- *     the Free Software Foundation, either version 3 of the License, or
- *     (at your option) any later version.
- *     NetGuard is distributed in the hope that it will be useful,
- *     but WITHOUT ANY WARRANTY; without even the implied warranty of
- *     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *     GNU General Public License for more details.
- *     You should have received a copy of the GNU General Public License
- *     along with NetGuard.  If not, see <http://www.gnu.org/licenses/>.
- *     Copyright 2015-2019 by Marcel Bokhorst (M66B)
- */
-
 package eu.faircode.netguard;
+
+/*
+    This file is part of NetGuard.
+
+    NetGuard is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    NetGuard is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with NetGuard.  If not, see <http://www.gnu.org/licenses/>.
+
+    Copyright 2015-2025 by Marcel Bokhorst (M66B)
+*/
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -44,8 +48,6 @@ import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.app.NavUtils;
 import androidx.preference.PreferenceManager;
-
-import eu.faircode.netguard.R;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -86,6 +88,11 @@ public class ActivityLog extends AppCompatActivity implements SharedPreferences.
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        if (!IAB.isPurchased(ActivityPro.SKU_LOG, this)) {
+            startActivity(new Intent(this, ActivityPro.class));
+            finish();
+        }
+
         Util.setTheme(this);
         super.onCreate(savedInstanceState);
         setContentView(R.layout.logging);
@@ -249,22 +256,26 @@ public class ActivityLog extends AppCompatActivity implements SharedPreferences.
                                 startActivity(lookupPort);
                                 return true;
 
-                            case R.id.menu_allow: {
-                                DatabaseHelper.getInstance(ActivityLog.this).updateAccess(packet, dname, 0);
-                                ServiceSinkhole.reload("allow host", ActivityLog.this, false);
-                                Intent main = new Intent(ActivityLog.this, ActivityMain.class);
-                                main.putExtra(ActivityMain.EXTRA_SEARCH, Integer.toString(uid));
-                                startActivity(main);
-                            }
+                            case R.id.menu_allow:
+                                if (IAB.isPurchased(ActivityPro.SKU_FILTER, ActivityLog.this)) {
+                                    DatabaseHelper.getInstance(ActivityLog.this).updateAccess(packet, dname, 0);
+                                    ServiceSinkhole.reload("allow host", ActivityLog.this, false);
+                                    Intent main = new Intent(ActivityLog.this, ActivityMain.class);
+                                    main.putExtra(ActivityMain.EXTRA_SEARCH, Integer.toString(uid));
+                                    startActivity(main);
+                                } else
+                                    startActivity(new Intent(ActivityLog.this, ActivityPro.class));
                                 return true;
 
-                            case R.id.menu_block: {
-                                DatabaseHelper.getInstance(ActivityLog.this).updateAccess(packet, dname, 1);
-                                ServiceSinkhole.reload("block host", ActivityLog.this, false);
-                                Intent main = new Intent(ActivityLog.this, ActivityMain.class);
-                                main.putExtra(ActivityMain.EXTRA_SEARCH, Integer.toString(uid));
-                                startActivity(main);
-                            }
+                            case R.id.menu_block:
+                                if (IAB.isPurchased(ActivityPro.SKU_FILTER, ActivityLog.this)) {
+                                    DatabaseHelper.getInstance(ActivityLog.this).updateAccess(packet, dname, 1);
+                                    ServiceSinkhole.reload("block host", ActivityLog.this, false);
+                                    Intent main = new Intent(ActivityLog.this, ActivityMain.class);
+                                    main.putExtra(ActivityMain.EXTRA_SEARCH, Integer.toString(uid));
+                                    startActivity(main);
+                                } else
+                                    startActivity(new Intent(ActivityLog.this, ActivityPro.class));
                                 return true;
 
                             case R.id.menu_copy:
@@ -493,13 +504,13 @@ public class ActivityLog extends AppCompatActivity implements SharedPreferences.
                     }
                 }.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
                 return true;
-//
-//            case R.id.menu_log_support:
-//                Intent intent = new Intent(Intent.ACTION_VIEW);
-//                intent.setData(Uri.parse("https://github.com/M66B/NetGuard/blob/master/FAQ.md#user-content-faq27"));
-//                if (getPackageManager().resolveActivity(intent, 0) != null)
-//                    startActivity(intent);
-//                return true;
+
+            case R.id.menu_log_support:
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse("https://github.com/M66B/NetGuard/blob/master/FAQ.md#user-content-faq27"));
+                if (getPackageManager().resolveActivity(intent, 0) != null)
+                    startActivity(intent);
+                return true;
 
             default:
                 return super.onOptionsItemSelected(item);
@@ -514,11 +525,18 @@ public class ActivityLog extends AppCompatActivity implements SharedPreferences.
             boolean other = prefs.getBoolean("proto_other", true);
             boolean allowed = prefs.getBoolean("traffic_allowed", true);
             boolean blocked = prefs.getBoolean("traffic_blocked", true);
-            adapter.changeCursor(DatabaseHelper.getInstance(this).getLog(udp, tcp, other, allowed, blocked));
+
+            String query = null;
             if (menuSearch != null && menuSearch.isActionViewExpanded()) {
                 SearchView searchView = (SearchView) menuSearch.getActionView();
-                adapter.getFilter().filter(getUidForName(searchView.getQuery().toString()));
+                if (searchView != null)
+                    query = getUidForName(searchView.getQuery().toString());
             }
+
+            if (TextUtils.isEmpty(query))
+                adapter.changeCursor(DatabaseHelper.getInstance(this).getLog(udp, tcp, other, allowed, blocked));
+            else
+                adapter.changeCursor(DatabaseHelper.getInstance(ActivityLog.this).searchLog(query));
         }
     }
 

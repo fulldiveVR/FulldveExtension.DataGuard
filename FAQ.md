@@ -3,6 +3,8 @@ NetGuard
 
 Please scroll down if you want to ask a question, request a feature, or report a bug.
 
+[Deutsche Übersetzung](https://raw.githubusercontent.com/M66B/NetGuard/master/FAQ-de.txt)
+
 Frequently Asked Questions (FAQ)
 --------------------------------
 
@@ -32,8 +34,10 @@ It will, however, be much better than nothing.
 In the advanced options you can enable *Seamless VPN handover on reload* to prevent traffic from leaking when the Android VPN service is being restarted.
 However, this does not work properly on all Android versions/variants causing NetGuard to hang and block all connections.
 
-Android N and later allows NetGuard to be an [Always-On VPN](https://developer.android.com/preview/features/afw.html#always-on-vpn).
-On Android O do not enable '*Block connections without VPN*', see [question 51](#user-content-faq51)) for more information on this.
+On Android N and later NetGuard can be configured as [Always-On VPN](https://developer.android.com/guide/topics/connectivity/vpn#always-on).
+On Android O **do not** enable the sub option '*Block connections without VPN*', see [question 51](#user-content-faq51)) for more information on this.
+
+The app obviously can't protect you from bugs in Android, such as documented [here](https://mullvad.net/en/blog/dns-traffic-can-leak-outside-the-vpn-tunnel-on-android).
 
 To protect yourself more, remember to disable Wi-Fi and mobile data before rebooting,
 and only enable them on reboot, after the firewall service has started (and the key icon is visible in the status bar).
@@ -48,6 +52,7 @@ then no, because NetGuard needs to use this service. Android allows only one app
 
 NetGuard is a firewall application, so there is no intention to add VPN support.
 However, NetGuard supports a [SOCKS5 proxy](https://en.wikipedia.org/wiki/SOCKS) to chain VPN applications.
+You can find one possible community contributed solution [here](https://itsignacioportal.github.io/netguard-pdnsf-any-vpn-combo/).
 
 <a name="faq3"></a>
 **(3) Can I use NetGuard on any Android version?**
@@ -249,7 +254,7 @@ You can't disable this notification, but you can remove the icon from the status
 **(25) Can you add a 'Select All' function?**
 
 There is no need for a 'Select All' function
-because you can switch from block (blacklist) to allow (whitelist) mode using Netguard's settings.
+because you can switch from block (blacklist) to allow (whitelist) mode using NetGuard's settings.
 See also [question 0](#user-content-faq0).
 
 <a name="faq27"></a>
@@ -443,7 +448,7 @@ Since NetGuard blocks, unlike any other no-root firewall, domain names instead o
 * RECEIVE_BOOT_COMPLETED ('*Run at startup*'): to start the firewall when booting the device
 * WAKE_LOCK ('*Prevent device from sleeping*'): to reliably reload rules in the background on connectivity changes
 * VIBRATE: to provide vibration feedback on widget tap
-* FOREGROUND_SERVICE ('foreground service'): to run a foreground service on Android 9 Pie and later
+* FOREGROUND_SERVICE/SPECIAL_USE ('foreground service'): to run a foreground service on Android 9 Pie and later
 * QUERY_ALL_PACKAGES: to list all apps on Android 11 and later
 * BILLING: to use in-app billing
 
@@ -528,8 +533,11 @@ and that Android allows NetGuard to use the internet in the background (see also
 
 Make sure you are not running NetGuard in allow (whitelist) mode (check the NetGuard default settings).
 
-Make sure you didn't enable the Always-On VPN setting '*Block connections without VPN*' (Android 8 Oreo or later).
+Make sure you didn't enable the Always-On VPN sub option '*Block connections without VPN*' (Android 8 Oreo or later).
 This will block resolving domain names too (is it a bug or feature?).
+
+Some internet providers block all DNS requests except via their own DNS servers.
+So, if you configured custom DNS servers, try to undo this.
 
 Some Android versions, including LineageOS and /e/ for some devices, contain a bug resulting in all internet traffic being blocked.
 Mostly, you can workaround this bug by enabling filtering in NetGuard's *Advanced options*.
@@ -544,8 +552,8 @@ except for applications with the condition *'Allow in lockdown mode'* enabled.
 You can use this mode to limit battery usage or network usage,
 for example, when your battery is almost empty or when your data allotment is almost exhausted.
 
-Note that Lockdown mode applies only if the corresponding option is also set in "Network options" 
-(one for Wi-Fi mode, one for Mobile data), allowing to have lockdown in only one of the two network modes 
+Note that Lockdown mode applies only if the corresponding option is also set in "Network options"
+(one for Wi-Fi mode, one for Mobile data), allowing to have lockdown in only one of the two network modes
 and not in the other (eg. Lock down if mobile data are active, but not if Wi-Fi is currently used).
 
 Note also that system applications will only be blocked in this mode
@@ -581,7 +589,7 @@ and you should see a different IP address from your regular one, and below in th
 field something else besides _Unknown_.
 
 **Be aware** that all the other Tor caveats (https://www.torproject.org/docs/faq.html.en) still apply,
-like having the Tor network unreacheable, your activity actively monitored/targeted in your country,
+like having the Tor network unreachable, your activity actively monitored/targeted in your country,
 online services (eg. Gmail, Google Play store) failing to login or being forced to solve endless capchas
 when accessing sites that use Cloudflare's CDN services.
 
@@ -623,7 +631,7 @@ In some circumstances, restricting system apps and system components is known to
 Google manages all purchases, so as a developer I have no control over purchases.
 So, the only thing I can do, is give some advice:
 
-* Make sure you have an active internet connection
+* Make sure you have an active, working internet connection, and turn off any VPN based app because it might prevent the Play store from checking purchases
 * Make sure you didn't block Google Play store / Play services
 * Make sure you are logged in with the right Google account and that there is nothing wrong with your Google account
 * Make sure you installed NetGuard via the right Google account if you configured multiple Google accounts on your device
@@ -678,13 +686,13 @@ Be sure to enter and confirm the addresses and to set two DNS server addresses.
 If you enter just one DNS server address, it will be used in addition to the default DNS server addresses.
 
 <a name="faq64"></a>
-**(64) Can you add DNS over TLS?**
+**(64) Can you add DNS over TLS/HTTP?**
 
-If you mean to intercept [DNS over TLS](https://en.wikipedia.org/wiki/DNS_over_TLS) requests to resolve domain names,
-this is not possible because DNS over TLS traffic is encrypted, which is the whole point of DNS over TLS.
+If you mean to intercept [DNS over HTTP](https://en.wikipedia.org/wiki/DNS_over_HTTPS) (DoH)
+or [DNS over TLS](https://en.wikipedia.org/wiki/DNS_over_TLS) (DoT) requests to resolve domain names,
+this is not possible because DoH/DoT traffic is encrypted, which is the whole point of DoH/DoT.
 
-If you mean to translate plain DNS to DNS over TLS, Android 9 Pie and later already support DNS over TLS out of the box,
-so it isn't worth the significant effort to add this.
+Please [see here](https://github.com/Ch4t4r/Nebulo/blob/master/docs/NONVPNMODE.md) about how you can use DoH/DoT with NetGuard anyway.
 
 <br />
 
@@ -711,6 +719,10 @@ and to save on battery power and to prevent crashes blocking NetGuard with itsel
 **(66) Why is a blocked app still accessing the internet?**
 
 Blocked apps cannot access the internet. There are no exceptions to this.
+All app and system traffic flows through the [Android VPN service](https://developer.android.com/guide/topics/connectivity/vpn),
+which is a *must* for companies with high security requirements.
+This also means that all apps will be treated in the same way
+and that the global access log (*Show log* in the three-dots overflow menu) will show all traffic.
 
 However:
 

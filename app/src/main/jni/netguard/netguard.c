@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with NetGuard.  If not, see <http://www.gnu.org/licenses/>.
 
-    Copyright 2015-2019 by Marcel Bokhorst (M66B)
+    Copyright 2015-2025 by Marcel Bokhorst (M66B)
 */
 
 #include "netguard.h"
@@ -580,9 +580,10 @@ jfieldID fidQName = NULL;
 jfieldID fidAName = NULL;
 jfieldID fidResource = NULL;
 jfieldID fidTTL = NULL;
+jfieldID fidDnsUid = NULL;
 
 void dns_resolved(const struct arguments *args,
-                  const char *qname, const char *aname, const char *resource, int ttl) {
+                  const char *qname, const char *aname, const char *resource, int ttl, jint uid) {
 #ifdef PROFILE_JNI
     float mselapsed;
     struct timeval start, end;
@@ -610,6 +611,7 @@ void dns_resolved(const struct arguments *args,
         fidAName = jniGetFieldID(args->env, clsRR, "AName", string);
         fidResource = jniGetFieldID(args->env, clsRR, "Resource", string);
         fidTTL = jniGetFieldID(args->env, clsRR, "TTL", "I");
+        fidDnsUid = jniGetFieldID(args->env, clsRR, "uid", "I");
     }
 
     jlong jtime = time(NULL) * 1000LL;
@@ -625,6 +627,7 @@ void dns_resolved(const struct arguments *args,
     (*args->env)->SetObjectField(args->env, jrr, fidAName, janame);
     (*args->env)->SetObjectField(args->env, jrr, fidResource, jresource);
     (*args->env)->SetIntField(args->env, jrr, fidTTL, ttl);
+    (*args->env)->SetIntField(args->env, jrr, fidDnsUid, uid);
 
     (*args->env)->CallVoidMethod(args->env, args->instance, midDnsResolved, jrr);
     jniCheckException(args->env);
