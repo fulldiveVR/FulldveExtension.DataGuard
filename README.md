@@ -3,6 +3,17 @@
 *NetGuard* provides simple and advanced ways to block access to the internet - no root required.
 Applications and addresses can individually be allowed or denied access to your Wi-Fi and/or mobile connection.
 
+## 🛡️ Community & Support
+
+Join our Discord for firewall configuration help and network privacy discussions!
+
+**[Join FullDive Discord →](https://discord.gg/FV3ucz5M2S)** - Get help in `🛡️ vpn-firewall-support`
+
+- 🐛 **Report bugs**: [GitHub Issues](https://github.com/fulldiveVR/FulldveExtension.DataGuard/issues)
+- 🔥 **Firewall rules** and app blocking help
+- 📊 **Network monitoring** tips
+
+
 <br>
 
 **WARNING: there is an app in the Samsung Galaxy app store "*Play Music - MP3 Music player*"
